@@ -43,8 +43,8 @@ npm install
 
 3. Set up environment variables:
 ```bash
-# Copy the example env file
-cp env.example .env
+# Copy the template env file
+cp env.template .env
 
 # Edit .env and add your values
 ```
@@ -53,6 +53,8 @@ Required environment variables:
 - `DATABASE_URL`: Your database connection string
 - `NEXTAUTH_SECRET`: Generate with `openssl rand -base64 32`
 - `NEXTAUTH_URL`: Your app URL (http://localhost:3000 for local dev)
+
+See [env.template](./env.template) for detailed configuration options and examples.
 
 4. Set up the database:
 ```bash
@@ -89,18 +91,44 @@ DATABASE_URL="postgresql://user:password@host:5432/database?schema=public"
 
 ## Deployment
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions on deploying to Vercel.
+### 🚀 Deploying to Vercel
 
-### Quick Deploy to Vercel
+**Having database errors on Vercel?** → **[START_HERE_VERCEL.md](./START_HERE_VERCEL.md)** ← Start here!
 
-1. Push your code to GitHub
-2. Import your repository in Vercel
-3. Set up a PostgreSQL database (Vercel Postgres, Neon, Supabase, etc.)
-4. Add environment variables in Vercel:
-   - `DATABASE_URL`
-   - `NEXTAUTH_SECRET`
-   - `NEXTAUTH_URL`
-5. Deploy!
+**See all documentation**: [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)
+
+#### Quick Deploy Steps:
+
+1. **Set up PostgreSQL database** (choose one):
+   - Vercel Postgres (easiest - auto-configures)
+   - [Neon](https://neon.tech) (free tier available)
+   - [Supabase](https://supabase.com) (free tier available)
+
+2. **Add environment variables** in Vercel Dashboard → Settings → Environment Variables:
+   - `DATABASE_URL` - Your PostgreSQL connection string
+   - `NEXTAUTH_SECRET` - Generate with: `openssl rand -base64 32`
+   - `NEXTAUTH_URL` - Your Vercel app URL (e.g., `https://your-app.vercel.app`)
+
+3. **Run database migrations** from your local terminal:
+   ```bash
+   # Set production DATABASE_URL
+   export DATABASE_URL="your-production-database-url"  # macOS/Linux
+   $env:DATABASE_URL="your-production-database-url"    # Windows PowerShell
+   
+   # Run migrations
+   npx prisma migrate deploy
+   ```
+
+4. **Deploy** - Push to GitHub or click "Redeploy" in Vercel
+
+5. **Test** - Visit `https://your-app.vercel.app/api/test-db` to verify database connection
+
+#### 📚 Deployment Documentation:
+- **Quick Fix**: [QUICK_FIX_VERCEL.md](./QUICK_FIX_VERCEL.md) - Fast troubleshooting guide
+- **Complete Guide**: [VERCEL_DATABASE_SETUP.md](./VERCEL_DATABASE_SETUP.md) - Detailed setup instructions
+- **Summary**: [VERCEL_DEPLOYMENT_SUMMARY.md](./VERCEL_DEPLOYMENT_SUMMARY.md) - Overview and troubleshooting
+- **Full Checklist**: [VERCEL_CHECKLIST.md](./VERCEL_CHECKLIST.md) - Step-by-step checklist
+- **General Deployment**: [DEPLOYMENT.md](./DEPLOYMENT.md) - Comprehensive deployment guide
 
 ## Project Structure
 
