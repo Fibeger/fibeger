@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/app/lib/prisma";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { eventManager } from "@/app/lib/events";
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,6 +70,18 @@ export async function POST(req: NextRequest) {
             lastReadMessageId: latestMessage.id,
           },
         });
+
+        // Emit conversation_update event to all members (including self) for instant sidebar update
+        const allMembers = await prisma.conversationMember.findMany({
+          where: { conversationId: convId },
+          select: { userId: true },
+        });
+        allMembers.forEach((member) => {
+          eventManager.emit(member.userId, 'conversation_update', {
+            conversationId: convId,
+            readBy: userId,
+          });
+        });
       }
 
       return NextResponse.json({ success: true });
@@ -113,6 +126,18 @@ export async function POST(req: NextRequest) {
           data: {
             lastReadMessageId: latestMessage.id,
           },
+        });
+
+        // Emit group_update event to all members (including self) for instant sidebar update
+        const allMembers = await prisma.groupChatMember.findMany({
+          where: { groupChatId: groupId },
+          select: { userId: true },
+        });
+        allMembers.forEach((member) => {
+          eventManager.emit(member.userId, 'group_update', {
+            groupChatId: groupId,
+            readBy: userId,
+          });
         });
       }
 

@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
-import { existsSync } from 'fs';
+import { put } from '@vercel/blob';
 
 /**
  * POST /api/upload
@@ -28,12 +26,6 @@ export async function POST(req: NextRequest) {
     }
 
     const uploadedFiles = [];
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'messages');
-
-    // Ensure upload directory exists
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
 
     for (const file of files) {
       // Validate file type (images and videos only)
@@ -68,18 +60,16 @@ export async function POST(req: NextRequest) {
       const timestamp = Date.now();
       const randomId = Math.random().toString(36).substring(2, 9);
       const extension = file.name.split('.').pop();
-      const filename = `${timestamp}-${randomId}.${extension}`;
-      const filepath = path.join(uploadsDir, filename);
+      const filename = `messages/${timestamp}-${randomId}.${extension}`;
 
-      // Convert file to buffer and write to disk
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      await writeFile(filepath, buffer);
+      // Upload to Vercel Blob Storage
+      const blob = await put(filename, file, {
+        access: 'public',
+        contentType: file.type,
+      });
 
-      // Return public URL
-      const publicUrl = `/uploads/messages/${filename}`;
       uploadedFiles.push({
-        url: publicUrl,
+        url: blob.url,
         type: file.type,
         name: file.name,
         size: file.size,

@@ -76,14 +76,49 @@ export default function Sidebar() {
       fetchGroupChats();
     };
 
+    // Handle incoming messages to update unread counts instantly
+    const handleMessage = (event: any) => {
+      const { conversationId, groupChatId, message } = event.data;
+      const currentUserId = parseInt((session?.user as any)?.id || '0');
+
+      // Don't update unread count for own messages
+      if (message?.sender?.id === currentUserId) {
+        return;
+      }
+
+      // Update conversation unread count locally (optimistic update)
+      if (conversationId) {
+        setConversations((prev) =>
+          prev.map((conv) =>
+            conv.id === conversationId
+              ? { ...conv, unreadCount: (conv.unreadCount || 0) + 1 }
+              : conv
+          )
+        );
+      }
+
+      // Update group chat unread count locally (optimistic update)
+      if (groupChatId) {
+        setGroupChats((prev) =>
+          prev.map((group) =>
+            group.id === groupChatId
+              ? { ...group, unreadCount: (group.unreadCount || 0) + 1 }
+              : group
+          )
+        );
+      }
+    };
+
     on('conversation_update', handleConversationUpdate);
     on('group_update', handleGroupUpdate);
+    on('message', handleMessage);
 
     return () => {
       off('conversation_update', handleConversationUpdate);
       off('group_update', handleGroupUpdate);
+      off('message', handleMessage);
     };
-  }, [on, off]);
+  }, [on, off, session]);
 
   const fetchConversations = async () => {
     try {

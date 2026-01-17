@@ -1071,7 +1071,7 @@ function MessagesContent() {
                   return (
                     <div 
                       key={msg.tempId || msg.id} 
-                      className={`flex gap-2 sm:gap-4 hover:bg-white hover:bg-opacity-[0.02] px-2 sm:px-4 py-1 -mx-2 sm:-mx-4 rounded ${isConsecutive ? 'mt-0.5' : 'mt-3 sm:mt-4'} ${msg.isPending ? 'opacity-70' : ''} relative group`}
+                      className={`flex gap-2 sm:gap-4 hover:bg-[#2e3035] px-2 sm:px-4 py-1 -mx-2 sm:-mx-4 rounded ${isConsecutive ? 'mt-0.5' : 'mt-3 sm:mt-4'} ${msg.isPending ? 'opacity-70' : ''} relative group`}
                       onMouseEnter={() => setHoveredMessage(msg.id)}
                       onMouseLeave={() => setHoveredMessage(null)}
                     >
