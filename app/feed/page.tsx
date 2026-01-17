@@ -32,23 +32,23 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" style={{backgroundAttachment: 'fixed'}}>
+    <div className="min-h-screen">
       {/* Main Content */}
       <main className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
         {/* Welcome Card */}
-        <div className="mb-8">
-          <div className="rounded-xl p-8 border shadow-lg" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
-            <h2 className="text-3xl font-bold mb-2">
+        <div className="mb-6">
+          <div className="rounded p-6" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+            <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
               Welcome back, {(session?.user as any)?.username}
             </h2>
             <p className="mb-6 font-medium" style={{ color: 'var(--text-secondary)' }}>
               Stay connected with your friends and explore your feed.
             </p>
             <div className="flex gap-4 flex-wrap">
-              <Link href="/profile" className="inline-flex items-center px-6 py-3 text-white font-semibold rounded-lg transition shadow-md hover:opacity-80" style={{ backgroundColor: 'var(--accent)' }}>
+              <Link href="/profile" className="inline-flex items-center px-6 py-2 text-white font-medium rounded transition" style={{ backgroundColor: 'var(--accent)' }}>
                 View Profile
               </Link>
-              <Link href="/messages" className="inline-flex items-center px-6 py-3 text-white font-semibold rounded-lg transition shadow-md hover:opacity-80" style={{ backgroundColor: 'var(--text-tertiary)' }}>
+              <Link href="/messages" className="inline-flex items-center px-6 py-2 text-white font-medium rounded transition" style={{ backgroundColor: 'var(--hover-bg)' }}>
                 Messages
               </Link>
             </div>
@@ -56,28 +56,23 @@ export default function FeedPage() {
         </div>
 
         {/* Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Main Feed */}
-          <div className="md:col-span-2 space-y-6">
+          <div className="md:col-span-2 space-y-4">
             {/* Create Post Card */}
-            <div className="rounded-xl p-6 border shadow-lg" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
-              <h3 className="text-xl font-bold mb-6">Share Your Thoughts</h3>
+            <div className="rounded p-6" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+              <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Share Your Thoughts</h3>
               <div className="space-y-4">
                 <input
                   type="text"
                   placeholder="What's on your mind?"
-                  className="w-full px-4 py-3 rounded-lg border transition font-medium"
-                  style={{
-                    borderColor: 'var(--border-color)',
-                    backgroundColor: 'var(--bg-tertiary)',
-                    color: 'var(--text-primary)',
-                  }}
+                  className="w-full px-4 py-3 rounded"
                 />
                 <div className="flex gap-3">
-                  <button className="flex-1 px-4 py-3 text-white rounded-lg transition font-semibold hover:opacity-80" style={{ backgroundColor: 'var(--text-tertiary)' }}>
+                  <button className="flex-1 px-4 py-2 text-white rounded transition font-medium" style={{ backgroundColor: 'var(--hover-bg)' }}>
                     Upload Photo
                   </button>
-                  <button className="flex-1 px-4 py-3 text-white rounded-lg transition font-semibold hover:opacity-80" style={{ backgroundColor: 'var(--accent)' }}>
+                  <button className="flex-1 px-4 py-2 text-white rounded transition font-medium" style={{ backgroundColor: 'var(--accent)' }}>
                     Post
                   </button>
                 </div>
@@ -85,13 +80,13 @@ export default function FeedPage() {
             </div>
 
             {/* Feed Items */}
-            <div className="rounded-xl p-6 border shadow-lg" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
-              <h3 className="text-xl font-bold mb-3">Your Feed</h3>
+            <div className="rounded p-6" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+              <h3 className="text-xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>Your Feed</h3>
               <p className="mb-6 font-medium" style={{ color: 'var(--text-secondary)' }}>
                 Posts from users you follow will appear here.
               </p>
               <div className="flex gap-3">
-                <Link href="/friends" className="inline-block px-6 py-2 text-white rounded-lg transition font-semibold text-sm hover:opacity-80" style={{ backgroundColor: 'var(--accent)' }}>
+                <Link href="/friends" className="inline-block px-6 py-2 text-white rounded transition font-medium" style={{ backgroundColor: 'var(--accent)' }}>
                   Find Friends
                 </Link>
               </div>
@@ -99,33 +94,33 @@ export default function FeedPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Quick Stats */}
-            <div className="rounded-xl p-6 border shadow-lg" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
-              <h3 className="text-lg font-bold mb-6">Your Stats</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-color)' }}>
-                  <span className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Friends</span>
+            <div className="rounded p-6" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+              <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Your Stats</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-4 rounded" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                  <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>Friends</span>
                   <span className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>0</span>
                 </div>
-                <div className="flex justify-between items-center p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-color)' }}>
-                  <span className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Messages</span>
+                <div className="flex justify-between items-center p-4 rounded" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                  <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>Messages</span>
                   <span className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>0</span>
                 </div>
               </div>
             </div>
 
             {/* Quick Links */}
-            <div className="rounded-xl p-6 border shadow-lg" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
-              <h3 className="text-lg font-bold mb-4">Quick Links</h3>
-              <div className="space-y-3">
-                <Link href="/profile" className="block w-full p-3 rounded-lg transition font-semibold border" style={{ color: 'var(--text-secondary)', borderColor: 'transparent' }}>
+            <div className="rounded p-6" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+              <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Quick Links</h3>
+              <div className="space-y-2">
+                <Link href="/profile" className="block w-full p-3 rounded transition font-medium" style={{ color: 'var(--text-secondary)', backgroundColor: 'transparent' }}>
                   My Profile
                 </Link>
-                <Link href="/messages" className="block w-full p-3 rounded-lg transition font-semibold border" style={{ color: 'var(--text-secondary)', borderColor: 'transparent' }}>
+                <Link href="/messages" className="block w-full p-3 rounded transition font-medium" style={{ color: 'var(--text-secondary)', backgroundColor: 'transparent' }}>
                   Messages
                 </Link>
-                <Link href="/friends" className="block w-full p-3 rounded-lg transition font-semibold border" style={{ color: 'var(--text-secondary)', borderColor: 'transparent' }}>
+                <Link href="/friends" className="block w-full p-3 rounded transition font-medium" style={{ color: 'var(--text-secondary)', backgroundColor: 'transparent' }}>
                   Friends
                 </Link>
               </div>

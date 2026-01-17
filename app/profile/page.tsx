@@ -3,7 +3,6 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { useTheme } from '@/app/context/ThemeContext';
 
 interface UserProfile {
   id: number;
@@ -18,7 +17,6 @@ interface UserProfile {
 export default function ProfilePage() {
   const { data: session } = useSession();
   const router = useRouter();
-  const { theme } = useTheme();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -74,8 +72,9 @@ export default function ProfilePage() {
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
-        setMessage('Profile updated successfully');
+        setMessage('✓ Profile updated successfully');
         setEditing(false);
+        setTimeout(() => setMessage(''), 3000);
       } else {
         setMessage('Failed to update profile');
       }
@@ -88,13 +87,11 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setMessage('File size must be less than 5MB');
       return;
     }
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       setMessage('Please upload an image file');
       return;
@@ -113,7 +110,8 @@ export default function ProfilePage() {
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
-        setMessage('Profile picture updated successfully');
+        setMessage('✓ Profile picture updated successfully');
+        setTimeout(() => setMessage(''), 3000);
       } else {
         const error = await res.json();
         setMessage(error.error || 'Failed to upload image');
@@ -143,7 +141,8 @@ export default function ProfilePage() {
         const data = await res.json();
         setProfile(data.user);
         setFormData({ ...formData, newUsername: '' });
-        setMessage('Username changed successfully');
+        setMessage('✓ Username changed successfully');
+        setTimeout(() => setMessage(''), 3000);
       } else {
         const error = await res.json();
         setMessage(error.error || 'Failed to change username');
@@ -172,16 +171,10 @@ export default function ProfilePage() {
       <div className="max-w-4xl mx-auto">
         {message && (
           <div 
-            className={`mb-6 p-4 rounded-lg font-semibold shadow-lg transition-all border ${
-              message.includes('successfully')
-                ? 'border-green-500'
-                : message.includes('Failed') || message.includes('Error') || message.includes('must be')
-                ? 'border-red-500'
-                : 'border-blue-500'
-            }`}
+            className={`mb-6 p-4 rounded font-semibold transition-all`}
             style={{
-              backgroundColor: message.includes('successfully') ? 'var(--hover-bg)' : 'var(--bg-tertiary)',
-              color: 'var(--text-primary)',
+              backgroundColor: message.includes('✓') ? 'var(--success)' : message.includes('Failed') || message.includes('Error') ? 'var(--danger)' : 'var(--accent)',
+              color: '#ffffff',
             }}
           >
             {message}
@@ -189,13 +182,12 @@ export default function ProfilePage() {
         )}
 
         {profile && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Profile Header */}
             <div 
-              className="rounded-xl shadow-lg border p-8"
+              className="rounded p-8"
               style={{
                 backgroundColor: 'var(--bg-secondary)',
-                borderColor: 'var(--border-color)',
               }}
             >
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8">
@@ -206,14 +198,15 @@ export default function ProfilePage() {
                       <img
                         src={profile.avatar}
                         alt={profile.username}
-                        className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4 border-blue-500 shadow-lg"
+                        className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4"
+                        style={{ borderColor: 'var(--accent)' }}
                       />
                     ) : (
-                      <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-5xl font-bold shadow-lg">
+                      <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full flex items-center justify-center text-white text-5xl font-bold" style={{ backgroundColor: 'var(--accent)' }}>
                         {profile.username.charAt(0).toUpperCase()}
                       </div>
                     )}
-                    <label className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full cursor-pointer shadow-lg transition hover:shadow-lg font-semibold">
+                    <label className="absolute bottom-0 right-0 text-white p-3 rounded-full cursor-pointer transition" style={{ backgroundColor: 'var(--accent)' }}>
                       <input
                         type="file"
                         accept="image/*"
@@ -224,32 +217,34 @@ export default function ProfilePage() {
                       📷
                     </label>
                   </div>
-                  <p className="text-xs text-slate-400 mt-2 font-semibold">Click to change</p>
+                  <p className="text-xs mt-2 font-medium" style={{ color: 'var(--text-tertiary)' }}>Click to change</p>
                 </div>
 
                 {/* User Info */}
                 <div className="flex-1">
-                  <h1 className="text-3xl sm:text-4xl font-bold text-slate-100">
+                  <h1 className="text-3xl sm:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
                     {profile.nickname || profile.username}
                   </h1>
-                  <p className="text-lg text-slate-400 mt-1 font-semibold">@{profile.username}</p>
-                  <p className="text-slate-300 mt-3 text-base font-medium">{profile.bio || 'No bio yet'}</p>
-                  <p className="text-sm text-slate-500 mt-4 font-medium">{profile.email}</p>
+                  <p className="text-lg mt-1 font-medium" style={{ color: 'var(--text-secondary)' }}>@{profile.username}</p>
+                  <p className="mt-3 text-base" style={{ color: 'var(--text-secondary)' }}>{profile.bio || 'No bio yet'}</p>
+                  <p className="text-sm mt-4 font-medium" style={{ color: 'var(--text-tertiary)' }}>{profile.email}</p>
                 </div>
 
                 {editing ? (
                   <button
                     onClick={() => setEditing(false)}
-                    className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-semibold shadow-md"
+                    className="px-6 py-2 text-white rounded transition font-medium"
+                    style={{ backgroundColor: 'var(--danger)' }}
                   >
                     Cancel
                   </button>
                 ) : (
                   <button
                     onClick={() => setEditing(true)}
-                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold shadow-md"
+                    className="px-6 py-2 text-white rounded transition font-medium"
+                    style={{ backgroundColor: 'var(--accent)' }}
                   >
-                    Edit
+                    Edit Profile
                   </button>
                 )}
               </div>
@@ -257,11 +252,11 @@ export default function ProfilePage() {
 
             {/* Edit Profile Form */}
             {editing && (
-              <div className="bg-slate-800/50 rounded-xl shadow-lg border border-slate-700 p-8">
-                <h2 className="text-2xl font-bold text-slate-100 mb-6">Edit Profile</h2>
+              <div className="rounded p-8" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Edit Profile</h2>
                 <form onSubmit={handleUpdate} className="space-y-6">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-300 mb-2">
+                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
                       Display Name
                     </label>
                     <input
@@ -271,12 +266,12 @@ export default function ProfilePage() {
                         setFormData({ ...formData, nickname: e.target.value })
                       }
                       placeholder="Your display name"
-                      className="w-full px-4 py-2 border border-slate-600 rounded-lg bg-slate-900 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-600 transition font-medium"
+                      className="w-full px-4 py-2 rounded"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-300 mb-2">
+                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
                       Bio
                     </label>
                     <textarea
@@ -285,7 +280,7 @@ export default function ProfilePage() {
                         setFormData({ ...formData, bio: e.target.value })
                       }
                       placeholder="Tell us about yourself..."
-                      className="w-full px-4 py-2 border border-slate-600 rounded-lg bg-slate-900 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-600 transition font-medium"
+                      className="w-full px-4 py-2 rounded"
                       rows={4}
                     />
                   </div>
@@ -293,14 +288,16 @@ export default function ProfilePage() {
                   <div className="flex gap-3 pt-4">
                     <button
                       type="submit"
-                      className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-semibold shadow-md"
+                      className="flex-1 px-4 py-2 text-white rounded transition font-medium"
+                      style={{ backgroundColor: 'var(--success)' }}
                     >
-                      Save
+                      Save Changes
                     </button>
                     <button
                       type="button"
                       onClick={() => setEditing(false)}
-                      className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-semibold shadow-md"
+                      className="flex-1 px-4 py-2 text-white rounded transition font-medium"
+                      style={{ backgroundColor: 'var(--danger)' }}
                     >
                       Cancel
                     </button>
@@ -310,17 +307,17 @@ export default function ProfilePage() {
             )}
 
             {/* Change Username */}
-            <div className="bg-slate-800/50 rounded-xl shadow-lg border border-slate-700 p-8">
-              <h2 className="text-2xl font-bold text-slate-100 mb-2">
+            <div className="rounded p-8" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+              <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
                 Change Username
               </h2>
-              <p className="text-slate-400 text-sm mb-6 font-medium">
+              <p className="text-sm mb-6 font-medium" style={{ color: 'var(--text-tertiary)' }}>
                 You can change your username once every 7 days.
               </p>
 
               {!canChangeUsername && profile.lastUsernameChange && (
-                <div className="mb-6 p-4 bg-amber-600/20 border border-amber-600 rounded-lg">
-                  <p className="text-amber-300 font-semibold">
+                <div className="mb-6 p-4 rounded" style={{ backgroundColor: 'var(--warning)', color: '#000' }}>
+                  <p className="font-semibold">
                     Available in {Math.ceil(
                       (new Date(profile.lastUsernameChange).getTime() +
                         7 * 24 * 60 * 60 * 1000 -
@@ -341,12 +338,13 @@ export default function ProfilePage() {
                     setFormData({ ...formData, newUsername: e.target.value })
                   }
                   disabled={!canChangeUsername}
-                  className="w-full px-4 py-2 border border-slate-600 rounded-lg bg-slate-900 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <button
                   type="submit"
                   disabled={!canChangeUsername}
-                  className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded-lg transition font-semibold shadow-md"
+                  className="w-full px-4 py-2 text-white rounded transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: canChangeUsername ? 'var(--accent)' : 'var(--text-tertiary)' }}
                 >
                   {canChangeUsername ? 'Change Username' : 'Cooldown Active'}
                 </button>

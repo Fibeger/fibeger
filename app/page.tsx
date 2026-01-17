@@ -10,7 +10,7 @@ export default function Home() {
           <div className="flex justify-center">
             <div 
               className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl font-bold text-white"
-              style={{ backgroundColor: 'var(--accent)' }}
+              style={{ backgroundColor: 'var(--bg-primary)' }}
               aria-hidden="true"
             >
               F
@@ -33,7 +33,7 @@ export default function Home() {
           <Link
             className="flex h-12 items-center justify-center rounded-lg px-8 font-semibold text-white transition-all focus:outline-2 focus:outline-offset-2"
             style={{
-              backgroundColor: 'var(--accent)',
+              backgroundColor: 'var(--bg-primary)',
               outlineColor: 'var(--accent)',
             }}
             href="/auth/signup"

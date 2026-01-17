@@ -1,35 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  /* Dark Mode (Default) */
-  --bg-primary: #1a1a1a;
-  --bg-secondary: #242424;
-  --bg-tertiary: #2d2d2d;
-  --text-primary: #ffffff;
-  --text-secondary: #b0b0b0;
-  --text-tertiary: #808080;
-  --border-color: #383838;
-  --hover-bg: #333333;
-  --focus-color: #4a4a4a;
-  --accent: #505050;
-  --scrollbar-thumb: #404040;
-  --scrollbar-track: #1f1f1f;
-}
-
-html.light-mode {
-  /* Light Mode */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f5f5f5;
-  --bg-tertiary: #eeeeee;
-  --text-primary: #1a1a1a;
-  --text-secondary: #4a4a4a;
-  --text-tertiary: #707070;
-  --border-color: #d0d0d0;
-  --hover-bg: #e8e8e8;
-  --focus-color: #d9d9d9;
-  --accent: #b0b0b0;
-  --scrollbar-thumb: #b0b0b0;
-  --scrollbar-track: #f0f0f0;
+  /* Discord-inspired Dark Theme */
+  --bg-primary: #313338;
+  --bg-secondary: #2b2d31;
+  --bg-tertiary: #1e1f22;
+  --text-primary: #f2f3f5;
+  --text-secondary: #b5bac1;
+  --text-tertiary: #949ba4;
+  --border-color: #26272b;
+  --hover-bg: #404249;
+  --focus-color: #404249;
+  --accent: #5865f2;
+  --accent-hover: #4752c4;
+  --scrollbar-thumb: #1a1b1e;
+  --scrollbar-track: #2b2d31;
+  --danger: #da373c;
+  --danger-hover: #b92d31;
+  --success: #23a559;
+  --warning: #f0b232;
 }
 
 @theme inline {
@@ -56,7 +45,7 @@ html.light-mode {
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
+  background: var(--text-tertiary);
 }
 
 html {
@@ -66,51 +55,62 @@ html {
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Professional typography */
+/* Discord-style typography */
 h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.5px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
 h1 {
-  font-size: 2.25rem;
+  font-size: 2rem;
   line-height: 2.5rem;
+  font-weight: 700;
 }
 
 h2 {
-  font-size: 1.875rem;
-  line-height: 2.25rem;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
 }
 
 h3 {
-  font-size: 1.5rem;
-  line-height: 2rem;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
 }
 
 p {
-  line-height: 1.6;
+  line-height: 1.5;
   color: var(--text-secondary);
 }
 
 a {
-  transition: all 0.2s ease;
+  transition: all 0.1s ease;
   color: var(--text-secondary);
-  text-decoration: none;
+  text-decoration: none !important;
 }
 
 a:hover {
   color: var(--text-primary);
+  text-decoration: none !important;
 }
 
 a:focus {
-  outline: 3px solid #666666;
+  text-decoration: none !important;
+}
+
+a:active {
+  text-decoration: none !important;
+}
+
+a:focus {
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 2px;
+  border-radius: 3px;
 }
 
 a:focus:not(:focus-visible) {
@@ -118,24 +118,25 @@ a:focus:not(:focus-visible) {
 }
 
 a:focus-visible {
-  outline: 3px solid #666666;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
 button {
-  font-weight: 600;
-  transition: all 0.2s ease;
+  font-weight: 500;
+  transition: all 0.17s ease;
   letter-spacing: 0;
   border: none;
   cursor: pointer;
+  border-radius: 3px;
 }
 
 button:hover {
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 button:focus {
-  outline: 3px solid #666666;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -144,16 +145,17 @@ button:focus:not(:focus-visible) {
 }
 
 button:focus-visible {
-  outline: 3px solid #666666;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
 input, textarea {
   border: 1px solid var(--border-color) !important;
-  background: var(--bg-secondary) !important;
+  background: var(--bg-tertiary) !important;
   color: var(--text-primary) !important;
-  font-weight: 500;
+  font-weight: 400;
   transition: all 0.2s ease;
+  border-radius: 3px;
 }
 
 input::placeholder, textarea::placeholder {
@@ -162,15 +164,13 @@ input::placeholder, textarea::placeholder {
 
 input:focus, textarea:focus {
   border-color: var(--accent) !important;
-  outline: 2px solid var(--accent) !important;
-  outline-offset: 0;
-  box-shadow: 0 0 0 3px rgba(128, 128, 128, 0.1) !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 input:focus-visible, textarea:focus-visible {
   border-color: var(--accent) !important;
-  outline: 2px solid var(--accent) !important;
-  outline-offset: 0;
+  outline: none !important;
 }
 
 /* Skip Link */
@@ -180,14 +180,16 @@ input:focus-visible, textarea:focus-visible {
   left: 0;
   background: var(--accent);
   color: var(--text-primary);
-  padding: 8px;
+  padding: 8px 16px;
   text-decoration: none;
   z-index: 100;
   font-weight: 600;
+  border-radius: 3px;
 }
 
 .skip-link:focus {
-  top: 0;
+  top: 8px;
+  left: 8px;
 }
 
 /* Reduce motion for accessibility */

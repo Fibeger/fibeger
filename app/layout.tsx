@@ -27,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <meta name="theme-color" content="#1a1a1a" />
+        <meta name="theme-color" content="#2b2d31" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -35,7 +35,7 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <Providers>
           <Sidebar />
-          <main id="main-content" role="main" className="ml-64">
+          <main id="main-content" role="main" className="ml-60">
             {children}
           </main>
         </Providers>
