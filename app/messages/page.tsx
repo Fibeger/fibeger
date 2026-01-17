@@ -219,16 +219,17 @@ function MessagesContent() {
             msg.tempId === tempId ? { ...serverMessage, isPending: false } : msg
           )
         );
+        // Don't restore input on success - keep it cleared
       } else {
-        // Remove optimistic message and restore input on failure
+        // Remove optimistic message on failure (but don't restore input)
         setMessages((prev) => prev.filter((msg) => msg.tempId !== tempId));
-        setNewMessage(messageContent);
+        alert('Failed to send message. Please try again.');
       }
     } catch (error) {
       console.error('Failed to send message');
-      // Remove optimistic message and restore input on failure
+      // Remove optimistic message on failure (but don't restore input)
       setMessages((prev) => prev.filter((msg) => msg.tempId !== tempId));
-      setNewMessage(messageContent);
+      alert('Failed to send message. Please try again.');
     }
   };
 
@@ -382,16 +383,14 @@ function MessagesContent() {
     : groupChat?.avatar;
 
   return (
-    <div className="flex-1 flex flex-col" style={{ backgroundColor: '#313338', position: 'relative', height: '100%' }}>
+    <div className="flex flex-col pt-14 lg:pt-0 fixed top-0 bottom-0 left-0 right-0 lg:left-60" style={{ backgroundColor: '#313338' }}>
       {activeChat ? (
         <>
           {/* Chat Header - Fixed */}
-          <div className="px-4 py-3 flex items-center gap-3" style={{ 
+          <div className="px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3 flex-shrink-0" style={{ 
             borderBottom: '1px solid rgba(0, 0, 0, 0.2)',
             boxShadow: '0 1px 0 rgba(4,4,5,0.2),0 1.5px 0 rgba(6,6,7,0.05),0 2px 0 rgba(4,4,5,0.05)',
             backgroundColor: '#313338',
-            position: 'sticky',
-            top: 0,
             zIndex: 10,
           }}>
             {conversation && <span className="text-xl" style={{ color: '#949ba4' }}>@</span>}
@@ -405,7 +404,7 @@ function MessagesContent() {
                   }
                 }
               }}
-              className="font-semibold text-base hover:underline"
+              className="font-semibold text-sm sm:text-base hover:underline truncate"
               style={{ color: '#f2f3f5' }}
             >
               {chatName}
@@ -589,7 +588,7 @@ function MessagesContent() {
           )}
 
           {/* Messages - Scrollable */}
-          <div className="flex-1 overflow-y-auto px-4 py-4" style={{ minHeight: 0 }}>
+          <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 sm:py-4" style={{ minHeight: 0, maxHeight: '100%' }}>
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full">
                 {chatAvatar ? (
@@ -624,7 +623,7 @@ function MessagesContent() {
                   const isConsecutive = !showAvatar;
 
                   return (
-                    <div key={msg.tempId || msg.id} className={`flex gap-4 hover:bg-black hover:bg-opacity-5 px-4 py-1 -mx-4 rounded ${isConsecutive ? 'mt-0.5' : 'mt-4'} ${msg.isPending ? 'opacity-70' : ''}`}>
+                    <div key={msg.tempId || msg.id} className={`flex gap-2 sm:gap-4 hover:bg-black hover:bg-opacity-5 px-2 sm:px-4 py-1 -mx-2 sm:-mx-4 rounded ${isConsecutive ? 'mt-0.5' : 'mt-3 sm:mt-4'} ${msg.isPending ? 'opacity-70' : ''}`}>
                       <div className="flex-shrink-0">
                         {showAvatar ? (
                           isCurrentUser ? (
@@ -632,11 +631,11 @@ function MessagesContent() {
                               <img
                                 src={(session?.user as any)?.avatar}
                                 alt="You"
-                                className="w-10 h-10 rounded-full"
+                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
                               />
                             ) : (
                               <div
-                                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
+                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-base"
                                 style={{ backgroundColor: '#5865f2' }}
                               >
                                 {((session?.user as any)?.username?.charAt(0) || 'U').toUpperCase()}
@@ -647,11 +646,11 @@ function MessagesContent() {
                               <img
                                 src={msg.sender.avatar}
                                 alt={msg.sender.username}
-                                className="w-10 h-10 rounded-full"
+                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
                               />
                             ) : (
                               <div
-                                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
+                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-base"
                                 style={{ backgroundColor: '#5865f2' }}
                               >
                                 {msg.sender.username.charAt(0).toUpperCase()}
@@ -659,7 +658,7 @@ function MessagesContent() {
                             )
                           )
                         ) : (
-                          <div className="w-10"></div>
+                          <div className="w-8 sm:w-10"></div>
                         )}
                       </div>
                       <div className="flex-1">
@@ -698,10 +697,8 @@ function MessagesContent() {
           {/* Message Input - Fixed */}
           <form
             onSubmit={handleSendMessage}
-            className="px-4 pb-6"
+            className="px-3 sm:px-4 pb-4 sm:pb-6 flex-shrink-0"
             style={{
-              position: 'sticky',
-              bottom: 0,
               backgroundColor: '#313338',
               zIndex: 10,
             }}

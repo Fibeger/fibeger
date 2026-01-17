@@ -102,7 +102,7 @@ export default function UserProfilePage() {
   }
 
   return (
-    <div className="min-h-screen py-12 px-4">
+    <div className="min-h-screen py-6 sm:py-12 px-4">
       <div className="max-w-4xl mx-auto">
         {message && (
           <div 
@@ -120,7 +120,7 @@ export default function UserProfilePage() {
           <div className="space-y-6">
             {/* Profile Header */}
             <div 
-              className="rounded-lg p-10"
+              className="rounded-lg p-6 sm:p-10"
               style={{
                 backgroundColor: 'var(--bg-secondary)',
               }}
@@ -169,10 +169,10 @@ export default function UserProfilePage() {
 
                 {/* Action Buttons */}
                 {profile.isFriend && (
-                  <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-3 w-full sm:w-auto">
                     <button
                       onClick={handleSendMessage}
-                      className="px-8 py-3 text-white rounded-md transition font-medium"
+                      className="w-full px-8 py-3 text-white rounded-md transition font-medium"
                       style={{ backgroundColor: 'var(--accent)' }}
                     >
                       Send Message
@@ -185,7 +185,7 @@ export default function UserProfilePage() {
             {/* Additional Info */}
             {!profile.isFriend && (
               <div 
-                className="rounded-lg p-10 text-center"
+                className="rounded-lg p-6 sm:p-10 text-center"
                 style={{ backgroundColor: 'var(--bg-secondary)' }}
               >
                 <p className="text-lg font-semibold" style={{ color: 'var(--text-secondary)' }}>

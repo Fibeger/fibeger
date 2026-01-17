@@ -39,10 +39,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-6">
+    <div className="flex min-h-screen items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-md">
         <div 
-          className="rounded-lg p-10 border"
+          className="rounded-lg p-6 sm:p-10 border"
           style={{
             backgroundColor: 'var(--bg-secondary)',
             borderColor: 'var(--border-color)',

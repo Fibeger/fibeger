@@ -16,7 +16,7 @@ export default function Navbar() {
   const isActive = (href: string) => pathname === href;
 
   return (
-    <nav className="sticky top-0 z-50 bg-slate-900 shadow-lg border-b border-slate-700" aria-label="Main navigation">
+    <nav className="hidden lg:block sticky top-0 z-50 bg-slate-900 shadow-lg border-b border-slate-700" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}

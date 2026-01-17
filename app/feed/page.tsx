@@ -34,21 +34,21 @@ export default function FeedPage() {
   return (
     <div className="min-h-screen">
       {/* Main Content */}
-      <main className="mx-auto max-w-6xl px-4 sm:px-6 py-12">
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-12">
         {/* Welcome Card */}
-        <div className="mb-8">
-          <div className="rounded-lg p-8" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-            <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+        <div className="mb-6 sm:mb-8">
+          <div className="rounded-lg p-6 sm:p-8" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
               Welcome back, {(session?.user as any)?.username}
             </h2>
-            <p className="mb-8 font-medium" style={{ color: 'var(--text-secondary)' }}>
+            <p className="mb-6 sm:mb-8 font-medium" style={{ color: 'var(--text-secondary)' }}>
               Stay connected with your friends and explore your feed.
             </p>
-            <div className="flex gap-4 flex-wrap">
-              <Link href="/profile" className="inline-flex items-center px-8 py-3 text-white font-medium rounded-md transition" style={{ backgroundColor: 'var(--accent)' }}>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <Link href="/profile" className="inline-flex items-center justify-center px-8 py-3 text-white font-medium rounded-md transition" style={{ backgroundColor: 'var(--accent)' }}>
                 View Profile
               </Link>
-              <Link href="/messages" className="inline-flex items-center px-8 py-3 text-white font-medium rounded-md transition" style={{ backgroundColor: 'var(--hover-bg)' }}>
+              <Link href="/messages" className="inline-flex items-center justify-center px-8 py-3 text-white font-medium rounded-md transition" style={{ backgroundColor: 'var(--hover-bg)' }}>
                 Messages
               </Link>
             </div>
@@ -60,15 +60,15 @@ export default function FeedPage() {
           {/* Main Feed */}
           <div className="md:col-span-2 space-y-6">
             {/* Create Post Card */}
-            <div className="rounded-lg p-8" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-              <h3 className="text-xl font-bold mb-5" style={{ color: 'var(--text-primary)' }}>Share Your Thoughts</h3>
-              <div className="space-y-5">
+            <div className="rounded-lg p-6 sm:p-8" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+              <h3 className="text-lg sm:text-xl font-bold mb-4 sm:mb-5" style={{ color: 'var(--text-primary)' }}>Share Your Thoughts</h3>
+              <div className="space-y-4 sm:space-y-5">
                 <input
                   type="text"
                   placeholder="What's on your mind?"
-                  className="w-full px-5 py-4 rounded-md"
+                  className="w-full px-4 sm:px-5 py-3 sm:py-4 rounded-md"
                 />
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <button className="flex-1 px-5 py-3 text-white rounded-md transition font-medium" style={{ backgroundColor: 'var(--hover-bg)' }}>
                     Upload Photo
                   </button>
@@ -80,7 +80,7 @@ export default function FeedPage() {
             </div>
 
             {/* Feed Items */}
-            <div className="rounded-lg p-8" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+            <div className="rounded-lg p-6 sm:p-8" style={{ backgroundColor: 'var(--bg-secondary)' }}>
               <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Your Feed</h3>
               <p className="mb-6 font-medium" style={{ color: 'var(--text-secondary)' }}>
                 Posts from users you follow will appear here.
@@ -96,7 +96,7 @@ export default function FeedPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Quick Stats */}
-            <div className="rounded-lg p-8" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+            <div className="rounded-lg p-6 sm:p-8" style={{ backgroundColor: 'var(--bg-secondary)' }}>
               <h3 className="text-lg font-bold mb-5" style={{ color: 'var(--text-primary)' }}>Your Stats</h3>
               <div className="space-y-4">
                 <div className="flex justify-between items-center p-5 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
@@ -111,7 +111,7 @@ export default function FeedPage() {
             </div>
 
             {/* Quick Links */}
-            <div className="rounded-lg p-8" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+            <div className="rounded-lg p-6 sm:p-8" style={{ backgroundColor: 'var(--bg-secondary)' }}>
               <h3 className="text-lg font-bold mb-5" style={{ color: 'var(--text-primary)' }}>Quick Links</h3>
               <div className="space-y-3">
                 <Link href="/profile" className="block w-full p-4 rounded-md transition font-medium" style={{ color: 'var(--text-secondary)', backgroundColor: 'transparent' }}>

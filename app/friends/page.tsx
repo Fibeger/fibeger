@@ -135,7 +135,7 @@ export default function FriendsPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-4xl mx-auto p-6 sm:p-12">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-12">
         <h1 className="text-4xl font-bold mb-10" style={{ color: 'var(--text-primary)' }}>Find Friends</h1>
 
         {message && (
@@ -159,7 +159,7 @@ export default function FriendsPage() {
               {friends.map((friend) => (
                 <div
                   key={friend.id}
-                  className="flex items-center justify-between p-5 rounded-lg transition hover:opacity-80"
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 rounded-lg transition hover:opacity-80 gap-3"
                   style={{ backgroundColor: 'var(--bg-tertiary)' }}
                 >
                   <div className="flex items-center gap-4">
@@ -188,7 +188,7 @@ export default function FriendsPage() {
                   </div>
                   <button
                     onClick={() => router.push(`/messages`)}
-                    className="px-5 py-2.5 text-white text-sm font-medium rounded-md transition hover:opacity-90"
+                    className="w-full sm:w-auto px-5 py-2.5 text-white text-sm font-medium rounded-md transition hover:opacity-90"
                     style={{ backgroundColor: 'var(--accent)' }}
                   >
                     Message
@@ -226,7 +226,7 @@ export default function FriendsPage() {
               {searchResults.map((user) => (
                 <div
                   key={user.id}
-                  className="flex items-center justify-between py-5 px-5 rounded-lg mb-4 transition"
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-5 px-5 rounded-lg mb-4 transition gap-3"
                   style={{ backgroundColor: 'var(--bg-tertiary)' }}
                 >
                   <div className="flex items-center gap-4">
@@ -257,7 +257,7 @@ export default function FriendsPage() {
                   </div>
                   <button
                     onClick={() => handleSendFriendRequest(user.username)}
-                    className="px-5 py-2.5 text-white text-sm font-medium rounded-md transition"
+                    className="w-full sm:w-auto px-5 py-2.5 text-white text-sm font-medium rounded-md transition"
                     style={{ backgroundColor: 'var(--accent)' }}
                   >
                     Add Friend
@@ -277,7 +277,7 @@ export default function FriendsPage() {
               {friendRequests.map((request) => (
                 <div
                   key={request.id}
-                  className="flex items-center justify-between p-5 rounded-lg transition"
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 rounded-lg transition gap-3"
                   style={{ backgroundColor: 'var(--bg-tertiary)' }}
                 >
                   <div className="flex items-center gap-4">
@@ -304,17 +304,17 @@ export default function FriendsPage() {
                       <p className="text-sm font-medium" style={{ color: 'var(--text-tertiary)' }}>@{request.sender.username}</p>
                     </div>
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 w-full sm:w-auto">
                     <button
                       onClick={() => handleRespondToRequest(request.id, 'accept')}
-                      className="px-5 py-2.5 text-white text-sm font-medium rounded-md transition"
+                      className="flex-1 sm:flex-none px-5 py-2.5 text-white text-sm font-medium rounded-md transition"
                       style={{ backgroundColor: 'var(--success)' }}
                     >
                       Accept
                     </button>
                     <button
                       onClick={() => handleRespondToRequest(request.id, 'reject')}
-                      className="px-5 py-2.5 text-white text-sm font-medium rounded-md transition"
+                      className="flex-1 sm:flex-none px-5 py-2.5 text-white text-sm font-medium rounded-md transition"
                       style={{ backgroundColor: 'var(--danger)' }}
                     >
                       Reject

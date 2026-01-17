@@ -196,6 +196,24 @@ input:focus-visible, textarea:focus-visible {
   left: 8px;
 }
 
+/* Mobile adjustments */
+@media (max-width: 1023px) {
+  main {
+    padding-top: 3.5rem; /* Account for mobile header */
+  }
+
+  /* Ensure touch targets are at least 44x44 */
+  button, a, input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better text sizing on mobile */
+  body {
+    font-size: 16px; /* Prevents zoom on input focus on iOS */
+  }
+}
+
 /* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
   *,

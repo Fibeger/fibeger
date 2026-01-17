@@ -230,23 +230,25 @@ export default function ProfilePage() {
                   <p className="text-sm mt-4 font-medium" style={{ color: 'var(--text-tertiary)' }}>{profile.email}</p>
                 </div>
 
-                {editing ? (
-                  <button
-                    onClick={() => setEditing(false)}
-                    className="px-8 py-3 text-white rounded-md transition font-medium"
-                    style={{ backgroundColor: 'var(--danger)' }}
-                  >
-                    Cancel
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setEditing(true)}
-                    className="px-8 py-3 text-white rounded-md transition font-medium"
-                    style={{ backgroundColor: 'var(--accent)' }}
-                  >
-                    Edit Profile
-                  </button>
-                )}
+                <div className="w-full sm:w-auto">
+                  {editing ? (
+                    <button
+                      onClick={() => setEditing(false)}
+                      className="w-full px-8 py-3 text-white rounded-md transition font-medium"
+                      style={{ backgroundColor: 'var(--danger)' }}
+                    >
+                      Cancel
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setEditing(true)}
+                      className="w-full px-8 py-3 text-white rounded-md transition font-medium"
+                      style={{ backgroundColor: 'var(--accent)' }}
+                    >
+                      Edit Profile
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -285,7 +287,7 @@ export default function ProfilePage() {
                     />
                   </div>
 
-                  <div className="flex gap-4 pt-4">
+                  <div className="flex flex-col sm:flex-row gap-4 pt-4">
                     <button
                       type="submit"
                       className="flex-1 px-5 py-3 text-white rounded-md transition font-medium"

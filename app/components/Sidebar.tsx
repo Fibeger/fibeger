@@ -4,6 +4,7 @@ import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useSidebar } from '../context/SidebarContext';
 
 interface User {
   id: number;
@@ -38,6 +39,7 @@ export default function Sidebar() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const router = useRouter();
+  const { isSidebarOpen, closeSidebar } = useSidebar();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [groupChats, setGroupChats] = useState<GroupChat[]>([]);
   const [showDMs, setShowDMs] = useState(true);
@@ -205,14 +207,49 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside 
-      className="fixed left-0 top-0 h-screen w-60 flex flex-col"
-      style={{
-        backgroundColor: '#2b2d31',
-        borderRight: 'none',
-      }}
-      aria-label="Sidebar navigation"
-    >
+    <>
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={closeSidebar}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside 
+        className={`fixed left-0 top-0 h-screen w-60 flex flex-col z-50 transition-transform duration-300 lg:translate-x-0 ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        style={{
+          backgroundColor: '#2b2d31',
+          borderRight: 'none',
+        }}
+        aria-label="Sidebar navigation"
+      >
+      {/* Mobile Close Button */}
+      <div className="lg:hidden flex items-center justify-between px-4 py-3" style={{ backgroundColor: '#1e1f22' }}>
+        <span className="text-sm font-semibold" style={{ color: '#f2f3f5' }}>Menu</span>
+        <button
+          onClick={closeSidebar}
+          className="p-2 rounded hover:bg-gray-700 transition"
+          aria-label="Close menu"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+            stroke="#949ba4"
+          >
+            <path d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
       {/* Navigation */}
       <nav className="flex-1 px-2 py-2 overflow-y-auto" aria-label="Main navigation">
         <div className="space-y-0.5">
@@ -220,6 +257,7 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => closeSidebar()}
               className="flex items-center gap-3 px-2 py-1.5 rounded transition-all group"
               style={{
                 backgroundColor: isActive(item.href) ? '#404249' : 'transparent',
@@ -351,6 +389,7 @@ export default function Sidebar() {
                     <Link
                       key={conv.id}
                       href={`/messages?dm=${conv.id}`}
+                      onClick={() => closeSidebar()}
                       className="flex items-center gap-2 px-2 py-1.5 rounded transition-all"
                       style={{
                         backgroundColor: isConvActive ? '#404249' : 'transparent',
@@ -522,6 +561,7 @@ export default function Sidebar() {
                     <Link
                       key={group.id}
                       href={`/messages?group=${group.id}`}
+                      onClick={() => closeSidebar()}
                       className="flex items-center gap-2 px-2 py-1.5 rounded transition-all"
                       style={{
                         backgroundColor: isGroupActive ? '#404249' : 'transparent',
@@ -615,5 +655,6 @@ export default function Sidebar() {
         </div>
       </div>
     </aside>
+    </>
   );
 }
