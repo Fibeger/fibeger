@@ -54,24 +54,31 @@ export const authOptions: AuthOptions = {
     },
     async session({ session, token }: any) {
       if (session.user && token.id) {
-        // Fetch the latest user data from the database
-        const dbUser = await prisma.user.findUnique({
-          where: { id: parseInt(token.id as string) },
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            avatar: true,
-            nickname: true,
-          },
-        });
+        try {
+          // Fetch the latest user data from the database
+          const dbUser = await prisma.user.findUnique({
+            where: { id: parseInt(token.id as string) },
+            select: {
+              id: true,
+              username: true,
+              email: true,
+              avatar: true,
+              nickname: true,
+            },
+          });
 
-        if (dbUser) {
-          session.user.id = dbUser.id.toString();
-          session.user.username = dbUser.username;
-          session.user.email = dbUser.email;
-          (session.user as any).avatar = dbUser.avatar;
-          (session.user as any).nickname = dbUser.nickname;
+          if (dbUser) {
+            session.user.id = dbUser.id.toString();
+            session.user.username = dbUser.username;
+            session.user.email = dbUser.email;
+            (session.user as any).avatar = dbUser.avatar;
+            (session.user as any).nickname = dbUser.nickname;
+          }
+        } catch (error) {
+          // If DB query fails, fallback to token data to avoid session loss
+          console.error('Session callback error:', error);
+          session.user.id = token.id;
+          session.user.username = token.username;
         }
       }
       return session;
@@ -88,7 +95,7 @@ export const authOptions: AuthOptions = {
         : 'next-auth.session-token',
       options: {
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/',
         secure: process.env.NODE_ENV === 'production',
       },

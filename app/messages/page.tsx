@@ -93,7 +93,7 @@ interface Reaction {
 interface Message {
   id: number;
   content: string;
-  attachments?: string | null; // JSON string
+  attachments?: string | Attachment[] | null; // JSON string or parsed array
   sender: User;
   createdAt: string;
   isPending?: boolean; // For optimistic updates
@@ -1226,7 +1226,11 @@ function MessagesContent() {
                           )}
                           {msg.attachments && (() => {
                             try {
-                              const attachmentList: Attachment[] = JSON.parse(msg.attachments);
+                              // Handle both string (JSON) and already-parsed array formats
+                              const attachmentList: Attachment[] = typeof msg.attachments === 'string' 
+                                ? JSON.parse(msg.attachments)
+                                : msg.attachments;
+                              
                               return (
                                 <div className="mt-2 flex flex-wrap gap-2">
                                   {attachmentList.map((attachment, idx) => {
