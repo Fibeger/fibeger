@@ -133,6 +133,30 @@ export default function FriendsPage() {
     }
   };
 
+  const handleMessageFriend = async (friendId: number) => {
+    try {
+      // Get or create conversation with this friend
+      const res = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ friendId }),
+      });
+
+      if (res.ok) {
+        const conversation = await res.json();
+        // Navigate to the DM
+        router.push(`/messages?dm=${conversation.id}`);
+      } else {
+        const error = await res.json();
+        setMessage(error.error || 'Failed to open conversation');
+        setTimeout(() => setMessage(''), 3000);
+      }
+    } catch (error) {
+      setMessage('Error opening conversation');
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-12">
@@ -187,7 +211,7 @@ export default function FriendsPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => router.push(`/messages`)}
+                    onClick={() => handleMessageFriend(friend.id)}
                     className="w-full sm:w-auto px-5 py-2.5 text-white text-sm font-medium rounded-md transition hover:opacity-90"
                     style={{ backgroundColor: 'var(--accent)' }}
                   >

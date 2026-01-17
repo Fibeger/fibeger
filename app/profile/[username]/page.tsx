@@ -61,9 +61,30 @@ export default function UserProfilePage() {
     }
   };
 
-  const handleSendMessage = () => {
-    // Navigate to messages page - the user can start a conversation there
-    router.push('/messages');
+  const handleSendMessage = async () => {
+    if (!profile) return;
+
+    try {
+      // Get or create conversation with this friend
+      const res = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ friendId: profile.id }),
+      });
+
+      if (res.ok) {
+        const conversation = await res.json();
+        // Navigate to the DM
+        router.push(`/messages?dm=${conversation.id}`);
+      } else {
+        const error = await res.json();
+        setMessage(error.error || 'Failed to open conversation');
+        setTimeout(() => setMessage(''), 3000);
+      }
+    } catch (error) {
+      setMessage('Error opening conversation');
+      setTimeout(() => setMessage(''), 3000);
+    }
   };
 
   if (loading) {

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-const MAX_CAPTION_LENGTH = 500;
+const MAX_CAPTION_LENGTH = 140;
 
 interface User {
   id: number;
@@ -38,6 +38,7 @@ export default function FeedPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<FeedPost | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -261,7 +262,7 @@ export default function FeedPage() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-max">
             {posts.map((post) => (
               <div
                 key={post.id}
@@ -269,18 +270,22 @@ export default function FeedPage() {
                 style={{ backgroundColor: '#2b2d31' }}
               >
                 {/* Media */}
-                <div className="relative aspect-square bg-black">
+                <div 
+                  className="relative bg-black cursor-pointer"
+                  onClick={() => setSelectedPost(post)}
+                >
                   {post.mediaType === 'video' ? (
                     <video
                       src={post.mediaUrl}
-                      className="w-full h-full object-cover"
+                      className="w-full object-contain"
                       controls
+                      onClick={(e) => e.stopPropagation()}
                     />
                   ) : (
                     <img
                       src={post.mediaUrl}
                       alt={post.caption || 'Post'}
-                      className="w-full h-full object-cover"
+                      className="w-full object-contain"
                     />
                   )}
                 </div>
@@ -363,6 +368,142 @@ export default function FeedPage() {
           </div>
         )}
       </div>
+
+      {/* Post View Modal */}
+      {selectedPost && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.95)' }}
+          onClick={() => setSelectedPost(null)}
+        >
+          <div
+            className="relative w-full max-w-6xl max-h-[90vh] overflow-auto rounded-lg"
+            style={{ backgroundColor: '#2b2d31' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setSelectedPost(null)}
+              className="absolute top-4 right-4 z-10 p-2 rounded-full transition hover:bg-gray-700"
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+
+            <div className="flex flex-col lg:flex-row">
+              {/* Image Section */}
+              <div className="flex-1 bg-black flex items-center justify-center p-4">
+                {selectedPost.mediaType === 'video' ? (
+                  <video
+                    src={selectedPost.mediaUrl}
+                    className="max-w-full max-h-[80vh] object-contain"
+                    controls
+                    autoPlay
+                  />
+                ) : (
+                  <img
+                    src={selectedPost.mediaUrl}
+                    alt={selectedPost.caption || 'Post'}
+                    className="max-w-full max-h-[80vh] object-contain"
+                  />
+                )}
+              </div>
+
+              {/* Info Section */}
+              <div className="lg:w-96 p-6 flex flex-col">
+                {/* User Info */}
+                <div className="flex items-center gap-3 mb-6 pb-6" style={{ borderBottom: '1px solid #404249' }}>
+                  <Link href={`/profile/${selectedPost.user.username}`} onClick={() => setSelectedPost(null)}>
+                    {selectedPost.user.avatar ? (
+                      <img
+                        src={selectedPost.user.avatar}
+                        alt={selectedPost.user.username}
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-semibold"
+                        style={{ backgroundColor: '#5865f2', color: '#ffffff' }}
+                      >
+                        {selectedPost.user.username.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </Link>
+                  <div className="flex-1">
+                    <Link 
+                      href={`/profile/${selectedPost.user.username}`} 
+                      onClick={() => setSelectedPost(null)}
+                      className="block"
+                    >
+                      <p className="font-semibold hover:underline" style={{ color: '#f2f3f5' }}>
+                        {selectedPost.user.nickname || selectedPost.user.username}
+                      </p>
+                      <p className="text-sm" style={{ color: '#949ba4' }}>
+                        @{selectedPost.user.username}
+                      </p>
+                    </Link>
+                  </div>
+                  {selectedPost.userId === currentUserId && (
+                    <button
+                      onClick={() => {
+                        setSelectedPost(null);
+                        handleDelete(selectedPost.id);
+                      }}
+                      className="p-2 rounded hover:bg-red-500/20 transition"
+                      title="Delete post"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="#f23f42">
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                {/* Caption */}
+                {selectedPost.caption && (
+                  <div className="mb-6">
+                    <p style={{ color: '#dbdee1' }}>
+                      {selectedPost.caption}
+                    </p>
+                  </div>
+                )}
+
+                {/* Date */}
+                <p className="text-sm mb-6" style={{ color: '#949ba4' }}>
+                  {new Date(selectedPost.createdAt).toLocaleString()}
+                </p>
+
+                {/* Actions */}
+                <div className="mt-auto pt-6" style={{ borderTop: '1px solid #404249' }}>
+                  <button
+                    onClick={() => handleLike(selectedPost.id)}
+                    className="flex items-center gap-3 transition hover:brightness-125 w-full"
+                  >
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill={isLikedByCurrentUser(selectedPost) ? '#f23f42' : 'none'}
+                      stroke={isLikedByCurrentUser(selectedPost) ? '#f23f42' : '#949ba4'}
+                      strokeWidth="2"
+                    >
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                    <span
+                      className="text-lg font-semibold"
+                      style={{ color: isLikedByCurrentUser(selectedPost) ? '#f23f42' : '#949ba4' }}
+                    >
+                      {selectedPost._count.likes} {selectedPost._count.likes === 1 ? 'like' : 'likes'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Upload Modal */}
       {showUploadModal && (
