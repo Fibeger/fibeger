@@ -27,15 +27,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <meta name="theme-color" content="#2b2d31" />
+        <meta name="theme-color" content="#313338" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        style={{ backgroundColor: '#313338' }}
       >
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <Providers>
           <Sidebar />
-          <main id="main-content" role="main" className="ml-60">
+          <main id="main-content" role="main" className="ml-60" style={{ backgroundColor: '#313338' }}>
             {children}
           </main>
         </Providers>

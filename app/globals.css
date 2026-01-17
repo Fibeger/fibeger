@@ -1,24 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  /* Discord-inspired Dark Theme */
+  /* Discord Dark Theme - Exact Colors */
   --bg-primary: #313338;
   --bg-secondary: #2b2d31;
   --bg-tertiary: #1e1f22;
   --text-primary: #f2f3f5;
-  --text-secondary: #b5bac1;
+  --text-secondary: #dbdee1;
   --text-tertiary: #949ba4;
+  --text-muted: #80848e;
   --border-color: #26272b;
   --hover-bg: #404249;
+  --hover-light: #35373c;
   --focus-color: #404249;
   --accent: #5865f2;
   --accent-hover: #4752c4;
+  --link-color: #00a8fc;
   --scrollbar-thumb: #1a1b1e;
   --scrollbar-track: #2b2d31;
   --danger: #da373c;
   --danger-hover: #b92d31;
   --success: #23a559;
   --warning: #f0b232;
+  --input-bg: #383a40;
 }
 
 @theme inline {
