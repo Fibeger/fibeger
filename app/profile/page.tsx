@@ -44,7 +44,7 @@ interface Badge {
 }
 
 export default function ProfilePage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,13 +76,17 @@ export default function ProfilePage() {
   const [newInterest, setNewInterest] = useState('');
 
   useEffect(() => {
-    if (!session) {
+    if (status === "unauthenticated") {
       router.push('/auth/login');
       return;
     }
 
+    if (status === "loading" || !session) {
+      return;
+    }
+
     fetchProfile();
-  }, [session, router]);
+  }, [status, session, router]);
 
   const fetchProfile = async () => {
     try {
@@ -395,7 +399,7 @@ export default function ProfilePage() {
     { code: 'EG', name: 'Egypt' },
   ];
 
-  if (loading) return (
+  if (status === "loading" || loading) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="inline-block animate-spin rounded-full h-12 w-12 border-4" style={{ borderColor: 'var(--accent)', borderTopColor: 'var(--text-primary)' }}></div>

@@ -19,7 +19,7 @@ interface FriendRequest {
 }
 
 export default function FriendsPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<UserPreview[]>([]);
@@ -30,14 +30,18 @@ export default function FriendsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!session) {
+    if (status === "unauthenticated") {
       router.push('/auth/login');
+      return;
+    }
+
+    if (status === "loading" || !session) {
       return;
     }
 
     fetchFriendRequests();
     fetchFriends();
-  }, [session, router]);
+  }, [status, session, router]);
 
   const fetchFriendRequests = async () => {
     try {
@@ -160,7 +164,7 @@ export default function FriendsPage() {
     }
   };
 
-  if (loading) {
+  if (status === "loading" || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
