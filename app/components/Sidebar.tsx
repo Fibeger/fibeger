@@ -39,15 +39,15 @@ export default function Sidebar() {
             outline: '2px solid transparent',
             outlineColor: 'var(--accent)',
           }}
-          aria-label="Fibeger - Home"
+          aria-label="Dicsord - Home"
         >
           <div 
             className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-base"
             style={{ backgroundColor: 'var(--accent)', color: '#ffffff' }}
           >
-            F
+            D
           </div>
-          <span className="font-semibold text-base" style={{ color: 'var(--text-primary)' }}>Fibeger</span>
+          <span className="font-semibold text-base" style={{ color: 'var(--text-primary)' }}>Dicsord</span>
         </Link>
       </div>
 

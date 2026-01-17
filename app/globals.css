@@ -128,7 +128,7 @@ button {
   letter-spacing: 0;
   border: none;
   cursor: pointer;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 button:hover {
@@ -155,7 +155,7 @@ input, textarea {
   color: var(--text-primary) !important;
   font-weight: 400;
   transition: all 0.2s ease;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 input::placeholder, textarea::placeholder {

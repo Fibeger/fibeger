@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fibeger - Social Media",
-  description: "Share your moments with Fibeger",
+  title: "Dicsord - Social Media",
+  description: "Share your moments with Dicsord",
 };
 
 export default function RootLayout({

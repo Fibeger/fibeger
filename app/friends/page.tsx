@@ -118,11 +118,11 @@ export default function FriendsPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-4xl mx-auto p-4 sm:p-8">
-        <h1 className="text-4xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Find Friends</h1>
+      <div className="max-w-4xl mx-auto p-6 sm:p-12">
+        <h1 className="text-4xl font-bold mb-10" style={{ color: 'var(--text-primary)' }}>Find Friends</h1>
 
         {message && (
-          <div className={`mb-6 p-4 rounded font-semibold transition-all`}
+          <div className={`mb-8 p-5 rounded-lg font-semibold transition-all`}
             style={{
               backgroundColor: message.includes('✓') ? 'var(--success)' : message.includes('✗') ? 'var(--danger)' : 'var(--accent)',
               color: '#ffffff'
@@ -132,16 +132,16 @@ export default function FriendsPage() {
         )}
 
         {/* Search Users */}
-        <div className="rounded p-8 mb-6" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-          <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Search Users</h2>
-          <p className="mb-4 font-medium" style={{ color: 'var(--text-secondary)' }}>Find your friends by username</p>
+        <div className="rounded-lg p-10 mb-8" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+          <h2 className="text-2xl font-bold mb-5" style={{ color: 'var(--text-primary)' }}>Search Users</h2>
+          <p className="mb-6 font-medium" style={{ color: 'var(--text-secondary)' }}>Find your friends by username</p>
           <div className="relative">
             <input
               type="text"
               placeholder="Search by username..."
               value={searchQuery}
               onChange={handleSearch}
-              className="w-full px-4 py-3 rounded text-base font-medium"
+              className="w-full px-5 py-4 rounded-md text-base font-medium"
             />
             {searching && (
               <div className="absolute right-4 top-3 font-medium" style={{ color: 'var(--text-tertiary)' }}>
@@ -151,14 +151,14 @@ export default function FriendsPage() {
           </div>
 
           {searchResults.length > 0 && (
-            <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border-color)' }}>
-              <p className="text-lg mb-6 font-semibold" style={{ color: 'var(--text-secondary)' }}>
+            <div className="mt-10 pt-8" style={{ borderTop: '1px solid var(--border-color)' }}>
+              <p className="text-lg mb-7 font-semibold" style={{ color: 'var(--text-secondary)' }}>
                 Found {searchResults.length} user{searchResults.length !== 1 ? 's' : ''}
               </p>
               {searchResults.map((user) => (
                 <div
                   key={user.id}
-                  className="flex items-center justify-between py-4 px-4 rounded mb-3 transition"
+                  className="flex items-center justify-between py-5 px-5 rounded-lg mb-4 transition"
                   style={{ backgroundColor: 'var(--bg-tertiary)' }}
                 >
                   <div className="flex items-center gap-4">
@@ -175,7 +175,13 @@ export default function FriendsPage() {
                       </div>
                     )}
                     <div>
-                      <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{user.username}</p>
+                      <button
+                        onClick={() => router.push(`/profile/${user.username}`)}
+                        className="font-semibold hover:underline text-left"
+                        style={{ color: 'var(--text-primary)' }}
+                      >
+                        {user.username}
+                      </button>
                       {user.nickname && (
                         <p className="text-sm font-medium" style={{ color: 'var(--text-tertiary)' }}>{user.nickname}</p>
                       )}
@@ -183,7 +189,7 @@ export default function FriendsPage() {
                   </div>
                   <button
                     onClick={() => handleSendFriendRequest(user.username)}
-                    className="px-4 py-2 text-white text-sm font-medium rounded transition"
+                    className="px-5 py-2.5 text-white text-sm font-medium rounded-md transition"
                     style={{ backgroundColor: 'var(--accent)' }}
                   >
                     Add Friend
@@ -196,14 +202,14 @@ export default function FriendsPage() {
 
         {/* Friend Requests */}
         {friendRequests.length > 0 && (
-          <div className="rounded p-8" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-            <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Friend Requests</h2>
-            <p className="mb-8 font-medium text-lg" style={{ color: 'var(--text-secondary)' }}>You have {friendRequests.length} pending request{friendRequests.length !== 1 ? 's' : ''}</p>
-            <div className="space-y-4">
+          <div className="rounded-lg p-10" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+            <h2 className="text-2xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>Friend Requests</h2>
+            <p className="mb-10 font-medium text-lg" style={{ color: 'var(--text-secondary)' }}>You have {friendRequests.length} pending request{friendRequests.length !== 1 ? 's' : ''}</p>
+            <div className="space-y-5">
               {friendRequests.map((request) => (
                 <div
                   key={request.id}
-                  className="flex items-center justify-between p-4 rounded transition"
+                  className="flex items-center justify-between p-5 rounded-lg transition"
                   style={{ backgroundColor: 'var(--bg-tertiary)' }}
                 >
                   <div className="flex items-center gap-4">
@@ -220,23 +226,27 @@ export default function FriendsPage() {
                       </div>
                     )}
                     <div>
-                      <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      <button
+                        onClick={() => router.push(`/profile/${request.sender.username}`)}
+                        className="font-semibold hover:underline text-left"
+                        style={{ color: 'var(--text-primary)' }}
+                      >
                         {request.sender.nickname || request.sender.username}
-                      </p>
+                      </button>
                       <p className="text-sm font-medium" style={{ color: 'var(--text-tertiary)' }}>@{request.sender.username}</p>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <button
                       onClick={() => handleRespondToRequest(request.id, 'accept')}
-                      className="px-4 py-2 text-white text-sm font-medium rounded transition"
+                      className="px-5 py-2.5 text-white text-sm font-medium rounded-md transition"
                       style={{ backgroundColor: 'var(--success)' }}
                     >
                       Accept
                     </button>
                     <button
                       onClick={() => handleRespondToRequest(request.id, 'reject')}
-                      className="px-4 py-2 text-white text-sm font-medium rounded transition"
+                      className="px-5 py-2.5 text-white text-sm font-medium rounded-md transition"
                       style={{ backgroundColor: 'var(--danger)' }}
                     >
                       Reject

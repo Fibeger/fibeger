@@ -58,14 +58,14 @@ export default function SignupPage() {
     <div className="flex min-h-screen items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div 
-          className="rounded-lg p-8 border"
+          className="rounded-lg p-10 border"
           style={{
             backgroundColor: 'var(--bg-secondary)',
             borderColor: 'var(--border-color)',
           }}
         >
           <h1 className="mb-2 text-center text-3xl font-bold">
-            Fibeger
+            Dicsord
           </h1>
           <h2 className="mb-6 text-center text-lg font-semibold" style={{ color: 'var(--text-secondary)' }}>
             Create Account
@@ -73,7 +73,7 @@ export default function SignupPage() {
 
           {error && (
             <div 
-              className="mb-4 rounded-md p-3 text-sm border"
+              className="mb-6 rounded-lg p-4 text-sm border"
               style={{
                 backgroundColor: 'var(--bg-tertiary)',
                 borderColor: 'var(--border-color)',
@@ -86,11 +86,11 @@ export default function SignupPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label
                 htmlFor="username"
-                className="block text-sm font-medium mb-2"
+                className="block text-sm font-medium mb-3"
               >
                 Username
               </label>
@@ -100,7 +100,7 @@ export default function SignupPage() {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full rounded-lg px-4 py-2 border transition-all"
+                className="w-full rounded-md px-5 py-3 border transition-all"
                 style={{
                   backgroundColor: 'var(--bg-tertiary)',
                   borderColor: 'var(--border-color)',
@@ -116,7 +116,7 @@ export default function SignupPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium mb-2"
+                className="block text-sm font-medium mb-3"
               >
                 Email
               </label>
@@ -126,7 +126,7 @@ export default function SignupPage() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full rounded-lg px-4 py-2 border transition-all"
+                className="w-full rounded-md px-5 py-3 border transition-all"
                 style={{
                   backgroundColor: 'var(--bg-tertiary)',
                   borderColor: 'var(--border-color)',
@@ -142,7 +142,7 @@ export default function SignupPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium mb-2"
+                className="block text-sm font-medium mb-3"
               >
                 Password
               </label>
@@ -152,7 +152,7 @@ export default function SignupPage() {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full rounded-lg px-4 py-2 border transition-all"
+                className="w-full rounded-md px-5 py-3 border transition-all"
                 style={{
                   backgroundColor: 'var(--bg-tertiary)',
                   borderColor: 'var(--border-color)',
@@ -168,7 +168,7 @@ export default function SignupPage() {
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium mb-2"
+                className="block text-sm font-medium mb-3"
               >
                 Confirm Password
               </label>
@@ -178,7 +178,7 @@ export default function SignupPage() {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="w-full rounded-lg px-4 py-2 border transition-all"
+                className="w-full rounded-md px-5 py-3 border transition-all"
                 style={{
                   backgroundColor: 'var(--bg-tertiary)',
                   borderColor: 'var(--border-color)',
@@ -194,7 +194,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg py-2 text-white font-medium transition-all focus:outline-2 focus:outline-offset-2"
+              className="w-full rounded-md py-3 text-white font-medium transition-all focus:outline-2 focus:outline-offset-2"
               style={{
                 backgroundColor: 'var(--accent)',
                 outlineColor: 'var(--accent)',
@@ -204,7 +204,7 @@ export default function SignupPage() {
             </button>
           </form>
 
-          <p className="mt-4 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
+          <p className="mt-6 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
             Already have an account?{" "}
             <Link
               href="/auth/login"

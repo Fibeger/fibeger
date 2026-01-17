@@ -22,19 +22,19 @@ export default function Navbar() {
           <Link 
             href="/feed" 
             className="flex items-center gap-3 group rounded-lg focus:outline-2 focus:outline-yellow-400 focus:outline-offset-2"
-            aria-label="Fibeger - Home"
+            aria-label="Dicsord - Home"
           >
             <div className="w-10 h-10 bg-gradient-to-br from-slate-400 to-slate-600 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:shadow-blue-500/50 transition-all" aria-hidden="true">
-              <span className="text-white font-bold text-lg">F</span>
+              <span className="text-white font-bold text-lg">D</span>
             </div>
-            <span className="font-bold text-xl hidden sm:inline text-slate-100">Fibeger</span>
+            <span className="font-bold text-xl hidden sm:inline text-slate-100">Dicsord</span>
           </Link>
 
           {/* Navigation Links */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-2">
             <Link
               href="/feed"
-              className={`px-4 py-2 font-semibold text-sm transition-all rounded-lg focus:outline-2 focus:outline-yellow-400 focus:outline-offset-2 ${
+              className={`px-5 py-2.5 font-semibold text-sm transition-all rounded-md focus:outline-2 focus:outline-yellow-400 focus:outline-offset-2 ${
                 isActive('/feed')
                   ? 'bg-blue-600 text-white shadow-md'
                   : 'text-slate-300 hover:text-white hover:bg-slate-800'
@@ -45,7 +45,7 @@ export default function Navbar() {
             </Link>
             <Link
               href="/messages"
-              className={`px-4 py-2 font-semibold text-sm transition-all rounded-lg focus:outline-2 focus:outline-yellow-400 focus:outline-offset-2 ${
+              className={`px-5 py-2.5 font-semibold text-sm transition-all rounded-md focus:outline-2 focus:outline-yellow-400 focus:outline-offset-2 ${
                 isActive('/messages')
                   ? 'bg-blue-600 text-white shadow-md'
                   : 'text-slate-300 hover:text-white hover:bg-slate-800'
@@ -56,7 +56,7 @@ export default function Navbar() {
             </Link>
             <Link
               href="/friends"
-              className={`px-4 py-2 font-semibold text-sm transition-all rounded-lg focus:outline-2 focus:outline-yellow-400 focus:outline-offset-2 ${
+              className={`px-5 py-2.5 font-semibold text-sm transition-all rounded-md focus:outline-2 focus:outline-yellow-400 focus:outline-offset-2 ${
                 isActive('/friends')
                   ? 'bg-blue-600 text-white shadow-md'
                   : 'text-slate-300 hover:text-white hover:bg-slate-800'
@@ -67,7 +67,7 @@ export default function Navbar() {
             </Link>
             <Link
               href="/groups"
-              className={`px-4 py-2 font-semibold text-sm transition-all rounded-lg focus:outline-2 focus:outline-yellow-400 focus:outline-offset-2 ${
+              className={`px-5 py-2.5 font-semibold text-sm transition-all rounded-md focus:outline-2 focus:outline-yellow-400 focus:outline-offset-2 ${
                 isActive('/groups')
                   ? 'bg-blue-600 text-white shadow-md'
                   : 'text-slate-300 hover:text-white hover:bg-slate-800'
@@ -78,7 +78,7 @@ export default function Navbar() {
             </Link>
             <Link
               href="/profile"
-              className={`px-4 py-2 font-semibold text-sm transition-all rounded-lg focus:outline-2 focus:outline-yellow-400 focus:outline-offset-2 ${
+              className={`px-5 py-2.5 font-semibold text-sm transition-all rounded-md focus:outline-2 focus:outline-yellow-400 focus:outline-offset-2 ${
                 isActive('/profile')
                   ? 'bg-blue-600 text-white shadow-md'
                   : 'text-slate-300 hover:text-white hover:bg-slate-800'
@@ -123,7 +123,7 @@ export default function Navbar() {
             </div>
             <button
               onClick={() => signOut()}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-sm transition-all shadow-md hover:shadow-lg focus:outline-2 focus:outline-yellow-400 focus:outline-offset-2"
+              className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-md font-semibold text-sm transition-all shadow-md hover:shadow-lg focus:outline-2 focus:outline-yellow-400 focus:outline-offset-2"
               aria-label="Sign out"
             >
               Sign Out

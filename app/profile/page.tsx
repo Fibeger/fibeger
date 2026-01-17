@@ -167,11 +167,11 @@ export default function ProfilePage() {
       Date.now();
 
   return (
-    <div className="min-h-screen py-8 px-4">
+    <div className="min-h-screen py-12 px-4">
       <div className="max-w-4xl mx-auto">
         {message && (
           <div 
-            className={`mb-6 p-4 rounded font-semibold transition-all`}
+            className={`mb-8 p-5 rounded-lg font-semibold transition-all`}
             style={{
               backgroundColor: message.includes('✓') ? 'var(--success)' : message.includes('Failed') || message.includes('Error') ? 'var(--danger)' : 'var(--accent)',
               color: '#ffffff',
@@ -182,10 +182,10 @@ export default function ProfilePage() {
         )}
 
         {profile && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Profile Header */}
             <div 
-              className="rounded p-8"
+              className="rounded-lg p-10"
               style={{
                 backgroundColor: 'var(--bg-secondary)',
               }}
@@ -233,7 +233,7 @@ export default function ProfilePage() {
                 {editing ? (
                   <button
                     onClick={() => setEditing(false)}
-                    className="px-6 py-2 text-white rounded transition font-medium"
+                    className="px-8 py-3 text-white rounded-md transition font-medium"
                     style={{ backgroundColor: 'var(--danger)' }}
                   >
                     Cancel
@@ -241,7 +241,7 @@ export default function ProfilePage() {
                 ) : (
                   <button
                     onClick={() => setEditing(true)}
-                    className="px-6 py-2 text-white rounded transition font-medium"
+                    className="px-8 py-3 text-white rounded-md transition font-medium"
                     style={{ backgroundColor: 'var(--accent)' }}
                   >
                     Edit Profile
@@ -252,11 +252,11 @@ export default function ProfilePage() {
 
             {/* Edit Profile Form */}
             {editing && (
-              <div className="rounded p-8" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-                <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Edit Profile</h2>
-                <form onSubmit={handleUpdate} className="space-y-6">
+              <div className="rounded-lg p-10" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Edit Profile</h2>
+                <form onSubmit={handleUpdate} className="space-y-7">
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                    <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
                       Display Name
                     </label>
                     <input
@@ -266,12 +266,12 @@ export default function ProfilePage() {
                         setFormData({ ...formData, nickname: e.target.value })
                       }
                       placeholder="Your display name"
-                      className="w-full px-4 py-2 rounded"
+                      className="w-full px-5 py-3 rounded-md"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                    <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
                       Bio
                     </label>
                     <textarea
@@ -280,15 +280,15 @@ export default function ProfilePage() {
                         setFormData({ ...formData, bio: e.target.value })
                       }
                       placeholder="Tell us about yourself..."
-                      className="w-full px-4 py-2 rounded"
+                      className="w-full px-5 py-3 rounded-md"
                       rows={4}
                     />
                   </div>
 
-                  <div className="flex gap-3 pt-4">
+                  <div className="flex gap-4 pt-4">
                     <button
                       type="submit"
-                      className="flex-1 px-4 py-2 text-white rounded transition font-medium"
+                      className="flex-1 px-5 py-3 text-white rounded-md transition font-medium"
                       style={{ backgroundColor: 'var(--success)' }}
                     >
                       Save Changes
@@ -296,7 +296,7 @@ export default function ProfilePage() {
                     <button
                       type="button"
                       onClick={() => setEditing(false)}
-                      className="flex-1 px-4 py-2 text-white rounded transition font-medium"
+                      className="flex-1 px-5 py-3 text-white rounded-md transition font-medium"
                       style={{ backgroundColor: 'var(--danger)' }}
                     >
                       Cancel
@@ -307,16 +307,16 @@ export default function ProfilePage() {
             )}
 
             {/* Change Username */}
-            <div className="rounded p-8" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-              <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+            <div className="rounded-lg p-10" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+              <h2 className="text-2xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
                 Change Username
               </h2>
-              <p className="text-sm mb-6 font-medium" style={{ color: 'var(--text-tertiary)' }}>
+              <p className="text-sm mb-8 font-medium" style={{ color: 'var(--text-tertiary)' }}>
                 You can change your username once every 7 days.
               </p>
 
               {!canChangeUsername && profile.lastUsernameChange && (
-                <div className="mb-6 p-4 rounded" style={{ backgroundColor: 'var(--warning)', color: '#000' }}>
+                <div className="mb-7 p-5 rounded-lg" style={{ backgroundColor: 'var(--warning)', color: '#000' }}>
                   <p className="font-semibold">
                     Available in {Math.ceil(
                       (new Date(profile.lastUsernameChange).getTime() +
@@ -329,7 +329,7 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              <form onSubmit={handleUsernameChange} className="space-y-4">
+              <form onSubmit={handleUsernameChange} className="space-y-5">
                 <input
                   type="text"
                   placeholder="New username"
@@ -338,12 +338,12 @@ export default function ProfilePage() {
                     setFormData({ ...formData, newUsername: e.target.value })
                   }
                   disabled={!canChangeUsername}
-                  className="w-full px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-5 py-3 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <button
                   type="submit"
                   disabled={!canChangeUsername}
-                  className="w-full px-4 py-2 text-white rounded transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-5 py-3 text-white rounded-md transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ backgroundColor: canChangeUsername ? 'var(--accent)' : 'var(--text-tertiary)' }}
                 >
                   {canChangeUsername ? 'Change Username' : 'Cooldown Active'}

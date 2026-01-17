@@ -50,6 +50,21 @@ export default function DMsPage() {
     return () => clearInterval(interval);
   }, [session, router]);
 
+  // Poll for messages in the selected conversation
+  useEffect(() => {
+    if (!selectedConversation) return;
+
+    // Fetch messages immediately when conversation is selected
+    fetchMessages(selectedConversation.id);
+
+    // Set up polling interval for real-time updates
+    const messagesInterval = setInterval(() => {
+      fetchMessages(selectedConversation.id);
+    }, 1500); // Poll every 1.5 seconds for instant feel
+
+    return () => clearInterval(messagesInterval);
+  }, [selectedConversation]);
+
   const fetchConversations = async () => {
     try {
       const res = await fetch('/api/conversations');
@@ -90,7 +105,7 @@ export default function DMsPage() {
 
   const handleSelectConversation = (conversation: Conversation) => {
     setSelectedConversation(conversation);
-    fetchMessages(conversation.id);
+    // fetchMessages will be called automatically by the useEffect
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -109,6 +124,8 @@ export default function DMsPage() {
 
       if (res.ok) {
         setNewMessage('');
+        // Message will appear automatically via polling
+        // But we can fetch immediately for instant feedback
         fetchMessages(selectedConversation.id);
       }
     } catch (error) {
@@ -166,12 +183,12 @@ export default function DMsPage() {
     <div className="flex h-screen">
       {/* Conversations List */}
       <div className="w-64 sm:w-80 flex flex-col" style={{ backgroundColor: 'var(--bg-secondary)', borderRight: '1px solid var(--border-color)' }}>
-        <div className="p-4" style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-tertiary)' }}>
+        <div className="p-5" style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-tertiary)' }}>
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Messages</h1>
             <button
               onClick={() => setShowNewConversation(!showNewConversation)}
-              className="px-3 py-1 rounded text-sm font-medium transition"
+              className="px-4 py-2 rounded-md text-sm font-medium transition"
               style={{ backgroundColor: 'var(--accent)', color: '#ffffff' }}
             >
               + New
@@ -181,8 +198,8 @@ export default function DMsPage() {
 
         <div className="flex-1 overflow-y-auto">
           {showNewConversation && (
-            <div className="p-4" style={{ borderBottom: '2px solid var(--border-color)', backgroundColor: 'var(--bg-tertiary)' }}>
-              <div className="flex items-center justify-between mb-3">
+            <div className="p-5" style={{ borderBottom: '2px solid var(--border-color)', backgroundColor: 'var(--bg-tertiary)' }}>
+              <div className="flex items-center justify-between mb-4">
                 <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>Start New Chat</h2>
                 <button
                   onClick={() => setShowNewConversation(false)}
@@ -265,7 +282,7 @@ export default function DMsPage() {
                 <button
                   key={conv.id}
                   onClick={() => handleSelectConversation(conv)}
-                  className={`w-full p-4 text-left transition`}
+                  className={`w-full p-5 text-left transition`}
                   style={{
                     backgroundColor: selectedConversation?.id === conv.id ? 'var(--hover-bg)' : 'transparent',
                     borderBottom: '1px solid var(--border-color)',
@@ -303,7 +320,7 @@ export default function DMsPage() {
         {selectedConversation ? (
           <>
             {/* Chat Header */}
-            <div className="p-4 flex items-center gap-3" style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+            <div className="p-5 flex items-center gap-4" style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
               {getOtherUser(selectedConversation)?.avatar && (
                 <img
                   src={getOtherUser(selectedConversation)!.avatar || ''}
@@ -313,10 +330,19 @@ export default function DMsPage() {
                 />
               )}
               <div>
-                <p className="font-semibold text-lg" style={{ color: 'var(--text-primary)' }}>
+                <button
+                  onClick={() => {
+                    const otherUser = getOtherUser(selectedConversation);
+                    if (otherUser) {
+                      router.push(`/profile/${otherUser.username}`);
+                    }
+                  }}
+                  className="font-semibold text-lg hover:underline text-left"
+                  style={{ color: 'var(--text-primary)' }}
+                >
                   {getOtherUser(selectedConversation)?.nickname ||
                     getOtherUser(selectedConversation)?.username}
-                </p>
+                </button>
                 <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
                   @{getOtherUser(selectedConversation)?.username}
                 </p>
@@ -324,7 +350,7 @@ export default function DMsPage() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-5 space-y-5">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -335,7 +361,7 @@ export default function DMsPage() {
                   }`}
                 >
                   <div
-                    className={`max-w-xs px-4 py-2 rounded font-medium`}
+                    className={`max-w-xs px-5 py-3 rounded-lg font-medium`}
                     style={{
                       backgroundColor: msg.sender.id === parseInt((session?.user as any)?.id || '0')
                         ? 'var(--accent)'
@@ -355,7 +381,7 @@ export default function DMsPage() {
             {/* Message Input */}
             <form
               onSubmit={handleSendMessage}
-              className="p-4 flex gap-3"
+              className="p-5 flex gap-4"
               style={{ backgroundColor: 'var(--bg-secondary)', borderTop: '1px solid var(--border-color)' }}
             >
               <input
@@ -363,11 +389,11 @@ export default function DMsPage() {
                 placeholder="Type a message..."
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                className="flex-1 px-4 py-2 rounded font-medium"
+                className="flex-1 px-5 py-3 rounded-md font-medium"
               />
               <button
                 type="submit"
-                className="px-6 py-2 text-white rounded transition font-medium"
+                className="px-8 py-3 text-white rounded-md transition font-medium"
                 style={{ backgroundColor: 'var(--accent)' }}
               >
                 Send
