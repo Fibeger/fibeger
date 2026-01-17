@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import FlagEmoji from '@/app/components/FlagEmoji';
 import personalityTestData from '@/app/lib/personalityTest.json';
 
 interface UserProfile {
@@ -52,43 +53,6 @@ export default function UserProfilePage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
 
-  const getCountryFlag = (countryCode: string | null) => {
-    if (!countryCode || countryCode.trim() === '') return '';
-    
-    // Ensure we have a valid 2-letter country code
-    const code = countryCode.toUpperCase().trim();
-    
-    // If the code is not exactly 2 characters, it's not a valid ISO 3166-1 alpha-2 code
-    if (code.length !== 2) {
-      console.warn('Invalid country code length:', code, 'Expected 2 characters, got', code.length);
-      return '🏳️'; // Return neutral flag as fallback
-    }
-    
-    // Validate that both characters are letters A-Z
-    if (!/^[A-Z]{2}$/.test(code)) {
-      console.warn('Invalid country code format:', code, 'Expected two uppercase letters');
-      return '🏳️';
-    }
-    
-    try {
-      // Convert country code to regional indicator symbols (flag emoji)
-      // Formula: Regional Indicator A (🇦) = 0x1F1E6 = 127462
-      // A = 65, so offset is 127462 - 65 = 127397
-      const codePoints = code.split('').map(char => 127397 + char.charCodeAt(0));
-      const flag = String.fromCodePoint(...codePoints);
-      
-      // Verify the flag was created successfully
-      if (!flag || flag.length === 0) {
-        console.warn('Failed to create flag for code:', code);
-        return '🏳️';
-      }
-      
-      return flag;
-    } catch (error) {
-      console.error('Error converting country code to flag:', code, error);
-      return '🏳️'; // Return neutral flag as fallback
-    }
-  };
 
   const getUserBadge = () => {
     if (!profile?.personalityBadge) return null;
@@ -300,9 +264,11 @@ export default function UserProfilePage() {
                         {profile.nickname || profile.username}
                       </h1>
                       {profile.country && (
-                        <span className="text-3xl" title={countries.find(c => c.code === profile.country)?.name}>
-                          {getCountryFlag(profile.country)}
-                        </span>
+                        <FlagEmoji 
+                          countryCode={profile.country}
+                          className="text-3xl"
+                          title={countries.find(c => c.code === profile.country)?.name}
+                        />
                       )}
                     </div>
                     
