@@ -29,6 +29,7 @@ interface UserProfile {
   personalityBadge: string | null;
   notificationSoundsEnabled: boolean;
   browserNotificationsEnabled: boolean;
+  steamUsername: string | null;
 }
 
 interface SocialLinks {
@@ -36,6 +37,7 @@ interface SocialLinks {
   github?: string;
   instagram?: string;
   linkedin?: string;
+  steam?: string;
 }
 
 interface Badge {
@@ -78,6 +80,7 @@ export default function ProfilePage() {
     interests: [] as string[],
     notificationSoundsEnabled: true,
     browserNotificationsEnabled: false,
+    steamUsername: '',
   });
   const [newInterest, setNewInterest] = useState('');
 
@@ -133,6 +136,7 @@ export default function ProfilePage() {
           interests: interests,
           notificationSoundsEnabled: data.notificationSoundsEnabled ?? true,
           browserNotificationsEnabled: data.browserNotificationsEnabled ?? false,
+          steamUsername: data.steamUsername || '',
         });
       }
     } catch (error) {
@@ -169,6 +173,7 @@ export default function ProfilePage() {
           interests: JSON.stringify(formData.interests),
           notificationSoundsEnabled: formData.notificationSoundsEnabled,
           browserNotificationsEnabled: formData.browserNotificationsEnabled,
+          steamUsername: formData.steamUsername,
         }),
       });
 
@@ -590,31 +595,36 @@ export default function ProfilePage() {
                     </div>
 
                     {/* Social Links */}
-                    {profile.socialLinks && (() => {
+                    {(profile.socialLinks || profile.steamUsername) && (() => {
                       try {
-                        const links = JSON.parse(profile.socialLinks) as SocialLinks;
-                        const hasLinks = Object.values(links).some(v => v);
+                        const links = JSON.parse(profile.socialLinks || '{}') as SocialLinks;
+                        const hasLinks = Object.values(links).some(v => v) || profile.steamUsername;
                         if (hasLinks) {
                           return (
                             <div className="flex items-center gap-4 mt-4">
                               {links.twitter && (
-                                <a href={`https://twitter.com/${links.twitter}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition">
+                                <a href={`https://twitter.com/${links.twitter}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="Twitter/X">
                                   𝕏
                                 </a>
                               )}
                               {links.github && (
-                                <a href={`https://github.com/${links.github}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition">
+                                <a href={`https://github.com/${links.github}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="GitHub">
                                   🐙
                                 </a>
                               )}
                               {links.instagram && (
-                                <a href={`https://instagram.com/${links.instagram}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition">
+                                <a href={`https://instagram.com/${links.instagram}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="Instagram">
                                   📷
                                 </a>
                               )}
                               {links.linkedin && (
-                                <a href={`https://linkedin.com/in/${links.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition">
+                                <a href={`https://linkedin.com/in/${links.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="LinkedIn">
                                   💼
+                                </a>
+                              )}
+                              {profile.steamUsername && (
+                                <a href={`https://steamcommunity.com/id/${profile.steamUsername}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="Steam">
+                                  🎮
                                 </a>
                               )}
                             </div>
@@ -949,6 +959,22 @@ export default function ProfilePage() {
                             setFormData({ ...formData, linkedin: e.target.value })
                           }
                           placeholder="username"
+                          className="w-full px-5 py-3 rounded-md"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
+                          🎮 Steam Username
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.steamUsername}
+                          onChange={(e) =>
+                            setFormData({ ...formData, steamUsername: e.target.value })
+                          }
+                          placeholder="username"
+                          maxLength={100}
                           className="w-full px-5 py-3 rounded-md"
                         />
                       </div>

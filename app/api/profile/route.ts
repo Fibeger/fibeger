@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
         personalityBadge: true,
         notificationSoundsEnabled: true,
         browserNotificationsEnabled: true,
+        steamUsername: true,
         createdAt: true,
       },
     });
@@ -76,7 +77,8 @@ export async function PUT(req: NextRequest) {
       themeColor,
       interests,
       notificationSoundsEnabled,
-      browserNotificationsEnabled
+      browserNotificationsEnabled,
+      steamUsername
     } = body;
 
     // Validate character limits
@@ -122,6 +124,13 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    if (steamUsername !== undefined && steamUsername !== null && steamUsername.length > 100) {
+      return NextResponse.json(
+        { error: "Steam username must be 100 characters or less" },
+        { status: 400 }
+      );
+    }
+
     const updates: any = {};
     if (nickname !== undefined) updates.nickname = nickname;
     if (bio !== undefined) updates.bio = bio;
@@ -138,6 +147,7 @@ export async function PUT(req: NextRequest) {
     if (interests !== undefined) updates.interests = interests;
     if (notificationSoundsEnabled !== undefined) updates.notificationSoundsEnabled = notificationSoundsEnabled;
     if (browserNotificationsEnabled !== undefined) updates.browserNotificationsEnabled = browserNotificationsEnabled;
+    if (steamUsername !== undefined) updates.steamUsername = steamUsername;
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json(
@@ -168,6 +178,7 @@ export async function PUT(req: NextRequest) {
         personalityBadge: true,
         notificationSoundsEnabled: true,
         browserNotificationsEnabled: true,
+        steamUsername: true,
       },
     });
 

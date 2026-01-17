@@ -37,6 +37,7 @@ model User {
   personalityBadge      String?               // Personality test result badge
   notificationSoundsEnabled Boolean           @default(true)        // Whether notification sounds are enabled
   browserNotificationsEnabled Boolean         @default(false)       // Whether browser notifications are enabled
+  steamUsername         String?               // Steam username
   
   createdAt             DateTime              @default(now())
   updatedAt             DateTime              @updatedAt

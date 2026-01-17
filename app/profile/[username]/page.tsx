@@ -26,6 +26,7 @@ interface UserProfile {
   themeColor: string | null;
   interests: string | null;
   personalityBadge: string | null;
+  steamUsername: string | null;
 }
 
 interface SocialLinks {
@@ -33,6 +34,7 @@ interface SocialLinks {
   github?: string;
   instagram?: string;
   linkedin?: string;
+  steam?: string;
 }
 
 interface Badge {
@@ -331,31 +333,36 @@ export default function UserProfilePage() {
                     </div>
 
                     {/* Social Links */}
-                    {profile.socialLinks && (() => {
+                    {(profile.socialLinks || profile.steamUsername) && (() => {
                       try {
-                        const links = JSON.parse(profile.socialLinks) as SocialLinks;
-                        const hasLinks = Object.values(links).some(v => v);
+                        const links = JSON.parse(profile.socialLinks || '{}') as SocialLinks;
+                        const hasLinks = Object.values(links).some(v => v) || profile.steamUsername;
                         if (hasLinks) {
                           return (
                             <div className="flex items-center gap-4 mt-4">
                               {links.twitter && (
-                                <a href={`https://twitter.com/${links.twitter}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition">
+                                <a href={`https://twitter.com/${links.twitter}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="Twitter/X">
                                   𝕏
                                 </a>
                               )}
                               {links.github && (
-                                <a href={`https://github.com/${links.github}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition">
+                                <a href={`https://github.com/${links.github}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="GitHub">
                                   🐙
                                 </a>
                               )}
                               {links.instagram && (
-                                <a href={`https://instagram.com/${links.instagram}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition">
+                                <a href={`https://instagram.com/${links.instagram}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="Instagram">
                                   📷
                                 </a>
                               )}
                               {links.linkedin && (
-                                <a href={`https://linkedin.com/in/${links.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition">
+                                <a href={`https://linkedin.com/in/${links.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="LinkedIn">
                                   💼
+                                </a>
+                              )}
+                              {profile.steamUsername && (
+                                <a href={`https://steamcommunity.com/id/${profile.steamUsername}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="Steam">
+                                  🎮
                                 </a>
                               )}
                             </div>
