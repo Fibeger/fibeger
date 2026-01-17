@@ -1084,21 +1084,21 @@ function MessagesContent() {
               </button>
               
               <div 
-                className="max-w-7xl max-h-[90vh] w-full mx-4"
+                className="max-w-7xl max-h-[90vh] w-full mx-4 flex items-center justify-center"
                 onClick={(e) => e.stopPropagation()}
               >
                 {viewingMedia.type.startsWith('image/') ? (
                   <img
                     src={viewingMedia.url}
                     alt={viewingMedia.name}
-                    className="w-full h-full object-contain rounded-lg"
+                    className="max-w-full max-h-[90vh] object-contain rounded-lg"
                   />
                 ) : viewingMedia.type.startsWith('video/') ? (
                   <video
                     src={viewingMedia.url}
                     controls
                     autoPlay
-                    className="w-full h-full object-contain rounded-lg"
+                    className="max-w-full max-h-[90vh] object-contain rounded-lg"
                   />
                 ) : null}
                 
@@ -1546,7 +1546,7 @@ function MessagesContent() {
                                           <img
                                             src={attachment.url}
                                             alt={attachment.name}
-                                            className="rounded-lg max-h-80 cursor-pointer hover:opacity-90 transition"
+                                            className="rounded-lg max-h-80 max-w-full object-contain cursor-pointer hover:opacity-90 transition"
                                             onClick={() => setViewingMedia({ url: attachment.url, type: attachment.type, name: attachment.name })}
                                           />
                                         ) : isVideo ? (
@@ -1554,7 +1554,7 @@ function MessagesContent() {
                                             <video
                                               src={attachment.url}
                                               controls
-                                              className="rounded-lg max-h-80 max-w-full"
+                                              className="rounded-lg max-h-80 max-w-full object-contain"
                                             />
                                             <button
                                               onClick={() => setViewingMedia({ url: attachment.url, type: attachment.type, name: attachment.name })}
