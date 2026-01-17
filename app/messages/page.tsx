@@ -2,7 +2,31 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
+
+// Utility function to detect and linkify URLs
+function linkifyText(text: string) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  
+  return parts.map((part, index) => {
+    if (part.match(urlRegex)) {
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:underline"
+          style={{ color: '#00a8fc' }}
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+}
 
 interface User {
   id: number;
@@ -16,6 +40,8 @@ interface Message {
   content: string;
   sender: User;
   createdAt: string;
+  isPending?: boolean; // For optimistic updates
+  tempId?: string; // Temporary ID for optimistic messages
 }
 
 interface Conversation {
@@ -49,6 +75,7 @@ function MessagesContent() {
   const [friends, setFriends] = useState<User[]>([]);
   const [showAddMember, setShowAddMember] = useState(false);
   const [addingMember, setAddingMember] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!session) {
@@ -72,6 +99,11 @@ function MessagesContent() {
       return () => clearInterval(interval);
     }
   }, [session, router, dmId, groupId]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const fetchConversation = async (id: number) => {
     try {
@@ -118,7 +150,14 @@ function MessagesContent() {
       const res = await fetch(endpoint);
       if (res.ok) {
         const data = await res.json();
-        setMessages(data);
+        // Preserve pending optimistic messages when updating from server
+        setMessages((prev) => {
+          const pendingMessages = prev.filter((msg) => msg.isPending);
+          // Merge server messages with pending ones, avoiding duplicates
+          const serverMessageIds = new Set(data.map((msg: Message) => msg.id));
+          const filteredPending = pendingMessages.filter((msg) => !serverMessageIds.has(msg.id));
+          return [...data, ...filteredPending];
+        });
       }
     } catch (error) {
       console.error('Failed to load messages');
@@ -133,6 +172,33 @@ function MessagesContent() {
     if (!id) return;
 
     const type = dmId ? 'dm' : 'group';
+    const messageContent = newMessage;
+    const tempId = `temp-${Date.now()}-${Math.random()}`;
+
+    // Get current user info for optimistic message
+    const userId = parseInt((session?.user as any)?.id || '0');
+    const currentUser: User = {
+      id: userId,
+      username: (session?.user as any)?.username || 'Unknown',
+      nickname: (session?.user as any)?.nickname || null,
+      avatar: (session?.user as any)?.avatar || null,
+    };
+
+    // Create optimistic message
+    const optimisticMessage: Message = {
+      id: -1, // Temporary ID
+      tempId,
+      content: messageContent,
+      sender: currentUser,
+      createdAt: new Date().toISOString(),
+      isPending: true,
+    };
+
+    // Add message optimistically to the UI
+    setMessages((prev) => [...prev, optimisticMessage]);
+
+    // Clear the input immediately for better UX
+    setNewMessage('');
 
     try {
       const endpoint = type === 'dm'
@@ -142,15 +208,27 @@ function MessagesContent() {
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: newMessage }),
+        body: JSON.stringify({ content: messageContent }),
       });
 
       if (res.ok) {
-        setNewMessage('');
-        fetchMessages(id, type);
+        const serverMessage = await res.json();
+        // Replace optimistic message with server response
+        setMessages((prev) => 
+          prev.map((msg) => 
+            msg.tempId === tempId ? { ...serverMessage, isPending: false } : msg
+          )
+        );
+      } else {
+        // Remove optimistic message and restore input on failure
+        setMessages((prev) => prev.filter((msg) => msg.tempId !== tempId));
+        setNewMessage(messageContent);
       }
     } catch (error) {
       console.error('Failed to send message');
+      // Remove optimistic message and restore input on failure
+      setMessages((prev) => prev.filter((msg) => msg.tempId !== tempId));
+      setNewMessage(messageContent);
     }
   };
 
@@ -546,7 +624,7 @@ function MessagesContent() {
                   const isConsecutive = !showAvatar;
 
                   return (
-                    <div key={msg.id} className={`flex gap-4 hover:bg-black hover:bg-opacity-5 px-4 py-1 -mx-4 rounded ${isConsecutive ? 'mt-0.5' : 'mt-4'}`}>
+                    <div key={msg.tempId || msg.id} className={`flex gap-4 hover:bg-black hover:bg-opacity-5 px-4 py-1 -mx-4 rounded ${isConsecutive ? 'mt-0.5' : 'mt-4'} ${msg.isPending ? 'opacity-70' : ''}`}>
                       <div className="flex-shrink-0">
                         {showAvatar ? (
                           isCurrentUser ? (
@@ -595,13 +673,24 @@ function MessagesContent() {
                             </span>
                           </div>
                         )}
-                        <p className="break-words" style={{ color: '#dbdee1', lineHeight: '1.375rem' }}>
-                          {msg.content}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="break-words" style={{ color: '#dbdee1', lineHeight: '1.375rem' }}>
+                            {linkifyText(msg.content)}
+                          </p>
+                          {msg.isPending && (
+                            <span className="text-xs" style={{ color: '#949ba4' }} title="Sending...">
+                              <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
                 })}
+                <div ref={messagesEndRef} />
               </div>
             )}
           </div>
