@@ -4,7 +4,6 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRealtimeEvents } from '@/app/hooks/useRealtimeEvents';
-import { useNotificationSound } from '@/app/hooks/useNotificationSound';
 
 // Utility function to detect and linkify URLs and mentions
 function linkifyText(text: string, router: any) {
@@ -156,7 +155,6 @@ function MessagesContent() {
   const groupAvatarInputRef = useRef<HTMLInputElement>(null);
   const [uploadingGroupAvatar, setUploadingGroupAvatar] = useState(false);
   const { on, off } = useRealtimeEvents();
-  const { playSound } = useNotificationSound();
 
   // Initial fetch (no polling!)
   useEffect(() => {
@@ -201,11 +199,6 @@ function MessagesContent() {
             const messageExists = prev.some((msg) => msg.id === newMessage.id);
             if (messageExists) return prev;
             
-            // Play notification sound if message is from another user
-            if (newMessage.sender.id !== currentUserId) {
-              playSound();
-            }
-            
             return [...prev, newMessage];
           });
         }
@@ -218,11 +211,6 @@ function MessagesContent() {
             // Check if message already exists (avoid duplicates)
             const messageExists = prev.some((msg) => msg.id === newMessage.id);
             if (messageExists) return prev;
-            
-            // Play notification sound if message is from another user
-            if (newMessage.sender.id !== currentUserId) {
-              playSound();
-            }
             
             return [...prev, newMessage];
           });
@@ -336,7 +324,7 @@ function MessagesContent() {
       unsubGroupDeleted();
       unsubGroupUpdated();
     };
-  }, [on, dmId, groupId, router, session, playSound]);
+  }, [on, dmId, groupId, router, session]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -1101,21 +1089,6 @@ function MessagesContent() {
                     className="max-w-full max-h-[90vh] object-contain rounded-lg"
                   />
                 ) : null}
-                
-                <div className="mt-4 text-center">
-                  <p className="text-sm" style={{ color: '#b5bac1' }}>
-                    {viewingMedia.name}
-                  </p>
-                  <a
-                    href={viewingMedia.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm hover:underline mt-2 inline-block"
-                    style={{ color: '#00a8fc' }}
-                  >
-                    Open in new tab
-                  </a>
-                </div>
               </div>
             </div>
           )}

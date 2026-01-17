@@ -23,29 +23,47 @@ Added audio notification functionality that plays a sound when users receive mes
 
 ### Files Modified
 
-1. **`app/messages/page.tsx`**
-   - Imported and integrated `useNotificationSound` hook
-   - Added sound playback in message event handler
+1. **`app/components/BrowserNotifications.tsx`**
+   - Added global message sound handler
+   - Imported `useNotificationSound`, `useRealtimeEvents`, and Next.js navigation hooks
    - Sound plays only when:
      - Message is from another user (not self)
-     - User is currently viewing the conversation/group
+     - User is NOT currently viewing that conversation/group
      - Message is new (not a duplicate)
+
+2. **`app/messages/page.tsx`**
+   - Removed local notification sound logic (now handled globally)
 
 ## How It Works
 
 ### Sound Playback Logic
 
 ```typescript
-// In the message event handler
-if (newMessage.sender.id !== currentUserId) {
-  playSound();
-}
+// In the global BrowserNotifications component
+const handleMessage = (event: any) => {
+  // Don't play for own messages
+  if (newMessage?.sender?.id === currentUserId) {
+    return;
+  }
+
+  // Check if we're currently viewing the chat
+  const isViewingThisChat = 
+    isOnMessagesPage && 
+    (currentDmId && messageConvId === parseInt(currentDmId)) ||
+    (currentGroupId && messageGroupId === parseInt(currentGroupId));
+
+  // Only play sound if we're NOT viewing this chat
+  if (!isViewingThisChat) {
+    playSound();
+  }
+};
 ```
 
 The sound notification:
 - ✅ Plays when receiving messages from others
 - ✅ Works for both DM and group chats
-- ✅ Only plays when viewing the active conversation
+- ✅ Only plays when NOT viewing the chat that generated the message
+- ✅ Silent when you're actively viewing the chat
 - ✅ Doesn't play for your own messages
 - ✅ Has a Web Audio API fallback (works without any files)
 - ✅ Handles browser autoplay restrictions gracefully
