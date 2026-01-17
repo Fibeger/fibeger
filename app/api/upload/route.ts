@@ -4,6 +4,8 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { put } from '@vercel/blob';
 import { prisma } from '@/app/lib/prisma';
 import crypto from 'crypto';
+import { writeFile, mkdir } from 'fs/promises';
+import path from 'path';
 
 /**
  * Calculate SHA-256 hash of a file
@@ -103,26 +105,61 @@ export async function POST(req: NextRequest) {
         const folder = formData.get('folder') as string || 'messages';
         const filename = `${folder}/${timestamp}-${randomId}.${extension}`;
 
-        // Upload to Vercel Blob Storage
-        const blob = await put(filename, file, {
-          access: 'public',
-          contentType: file.type,
-        });
+        // Check if Vercel Blob is configured
+        const useBlobStorage = !!process.env.BLOB_READ_WRITE_TOKEN;
 
-        fileUrl = blob.url;
-
-        // Store file metadata in database
-        await prisma.fileBlob.create({
-          data: {
-            hash: fileHash,
-            url: blob.url,
+        if (useBlobStorage) {
+          // Upload to Vercel Blob Storage
+          const blob = await put(filename, file, {
+            access: 'public',
             contentType: file.type,
-            size: file.size,
-            uploadedBy: parseInt(session.user.id),
-          },
-        });
+          });
 
-        console.log(`File uploaded: ${fileHash} -> ${blob.url}`);
+          fileUrl = blob.url;
+
+          // Store file metadata in database
+          await prisma.fileBlob.create({
+            data: {
+              hash: fileHash,
+              url: blob.url,
+              contentType: file.type,
+              size: file.size,
+              uploadedBy: parseInt(session.user.id),
+            },
+          });
+
+          console.log(`File uploaded to Vercel Blob: ${fileHash} -> ${blob.url}`);
+        } else {
+          // Use local file storage
+          const uploadsDir = path.join(process.cwd(), 'public', 'uploads', folder);
+          
+          // Ensure directory exists
+          await mkdir(uploadsDir, { recursive: true });
+
+          // Save file locally
+          const localFilename = `${timestamp}-${randomId}.${extension}`;
+          const filePath = path.join(uploadsDir, localFilename);
+          
+          const arrayBuffer = await file.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          await writeFile(filePath, buffer);
+
+          // Create public URL
+          fileUrl = `/uploads/${folder}/${localFilename}`;
+
+          // Store file metadata in database
+          await prisma.fileBlob.create({
+            data: {
+              hash: fileHash,
+              url: fileUrl,
+              contentType: file.type,
+              size: file.size,
+              uploadedBy: parseInt(session.user.id),
+            },
+          });
+
+          console.log(`File uploaded locally: ${fileHash} -> ${fileUrl}`);
+        }
       }
 
       uploadedFiles.push({

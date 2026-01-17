@@ -4,6 +4,8 @@ import { prisma } from "@/app/lib/prisma";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { put } from "@vercel/blob";
 import crypto from "crypto";
+import { writeFile, mkdir } from 'fs/promises';
+import path from 'path';
 
 /**
  * Calculate SHA-256 hash of a file
@@ -71,25 +73,60 @@ export async function POST(req: NextRequest) {
       const ext = file.name.split(".").pop() || "jpg";
       const filename = `avatars/${userId}-${timestamp}.${ext}`;
 
-      // Upload to Vercel Blob
-      const blob = await put(filename, file, {
-        access: "public",
-      });
+      // Check if Vercel Blob is configured
+      const useBlobStorage = !!process.env.BLOB_READ_WRITE_TOKEN;
 
-      avatarUrl = blob.url;
+      if (useBlobStorage) {
+        // Upload to Vercel Blob
+        const blob = await put(filename, file, {
+          access: "public",
+        });
 
-      // Store file metadata in database
-      await prisma.fileBlob.create({
-        data: {
-          hash: fileHash,
-          url: blob.url,
-          contentType: file.type,
-          size: file.size,
-          uploadedBy: parseInt(session.user.id),
-        },
-      });
+        avatarUrl = blob.url;
 
-      console.log(`Avatar uploaded: ${fileHash} -> ${blob.url}`);
+        // Store file metadata in database
+        await prisma.fileBlob.create({
+          data: {
+            hash: fileHash,
+            url: blob.url,
+            contentType: file.type,
+            size: file.size,
+            uploadedBy: parseInt(session.user.id),
+          },
+        });
+
+        console.log(`Avatar uploaded to Vercel Blob: ${fileHash} -> ${blob.url}`);
+      } else {
+        // Use local file storage
+        const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'avatars');
+        
+        // Ensure directory exists
+        await mkdir(uploadsDir, { recursive: true });
+
+        // Save file locally
+        const localFilename = `${userId}-${timestamp}.${ext}`;
+        const filePath = path.join(uploadsDir, localFilename);
+        
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        await writeFile(filePath, buffer);
+
+        // Create public URL
+        avatarUrl = `/uploads/avatars/${localFilename}`;
+
+        // Store file metadata in database
+        await prisma.fileBlob.create({
+          data: {
+            hash: fileHash,
+            url: avatarUrl,
+            contentType: file.type,
+            size: file.size,
+            uploadedBy: parseInt(session.user.id),
+          },
+        });
+
+        console.log(`Avatar uploaded locally: ${fileHash} -> ${avatarUrl}`);
+      }
     }
 
     // Update user avatar in database
