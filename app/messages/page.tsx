@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 
 interface User {
   id: number;
@@ -33,7 +33,7 @@ interface GroupChat {
   messages: Message[];
 }
 
-export default function MessagesPage() {
+function MessagesContent() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -355,5 +355,17 @@ export default function MessagesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 flex items-center justify-center" style={{ backgroundColor: '#313338' }}>
+        <p className="text-xl font-semibold" style={{ color: '#949ba4' }}>Loading...</p>
+      </div>
+    }>
+      <MessagesContent />
+    </Suspense>
   );
 }
