@@ -4,43 +4,32 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useFeedStore } from "@/app/stores/feedStore";
 
 const MAX_CAPTION_LENGTH = 140;
-
-interface User {
-  id: number;
-  username: string;
-  nickname: string | null;
-  avatar: string | null;
-}
-
-interface FeedPost {
-  id: number;
-  userId: number;
-  caption: string | null;
-  mediaUrl: string;
-  mediaType: string;
-  isPublic: boolean;
-  createdAt: string;
-  user: User;
-  likes: { userId: number }[];
-  _count: {
-    likes: number;
-  };
-}
 
 export default function FeedPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [posts, setPosts] = useState<FeedPost[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  // Get state and actions from store
+  const {
+    posts,
+    feedType,
+    isLoading,
+    fetchPosts,
+    setFeedType,
+    likePost,
+    deletePost,
+    toggleLike,
+  } = useFeedStore();
+
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [caption, setCaption] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [selectedPost, setSelectedPost] = useState<FeedPost | null>(null);
-  const [feedType, setFeedType] = useState<'friends' | 'public'>('friends');
+  const [selectedPost, setSelectedPost] = useState<any>(null);
   const [isPublic, setIsPublic] = useState(false);
 
   useEffect(() => {
@@ -51,24 +40,9 @@ export default function FeedPage() {
 
   useEffect(() => {
     if (session) {
-      fetchPosts();
+      fetchPosts(feedType);
     }
-  }, [session, feedType]);
-
-  const fetchPosts = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/feed?type=${feedType}`);
-      if (res.ok) {
-        const data = await res.json();
-        setPosts(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch posts:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [session, feedType, fetchPosts]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -113,7 +87,7 @@ export default function FeedPage() {
       // First, upload the file
       const formData = new FormData();
       formData.append('file', selectedFile);
-      formData.append('folder', 'feed'); // Upload to feed folder
+      formData.append('folder', 'feed');
 
       const uploadRes = await fetch('/api/upload', {
         method: 'POST',
@@ -158,7 +132,7 @@ export default function FeedPage() {
       setShowUploadModal(false);
       
       // Refresh posts
-      await fetchPosts();
+      await fetchPosts(feedType);
     } catch (error) {
       console.error('Upload failed:', error);
       alert('Failed to upload post. Please try again.');
@@ -168,61 +142,35 @@ export default function FeedPage() {
   };
 
   const handleLike = async (postId: number) => {
-    try {
-      const res = await fetch(`/api/feed/${postId}/like`, {
-        method: 'POST',
-      });
-
-      if (res.ok) {
-        // Optimistically update the UI
-        setPosts(posts.map(post => {
-          if (post.id === postId) {
-            const currentUserId = parseInt((session?.user as any)?.id || '0');
-            const isLiked = post.likes.some(like => like.userId === currentUserId);
-            
-            return {
-              ...post,
-              likes: isLiked
-                ? post.likes.filter(like => like.userId !== currentUserId)
-                : [...post.likes, { userId: currentUserId }],
-              _count: {
-                likes: isLiked ? post._count.likes - 1 : post._count.likes + 1,
-              },
-            };
-          }
-          return post;
-        }));
-      }
-    } catch (error) {
-      console.error('Failed to like post:', error);
+    const currentUserId = parseInt((session?.user as any)?.id || '0');
+    
+    // Optimistically update UI
+    toggleLike(postId, currentUserId);
+    
+    // Call API
+    const result = await likePost(postId);
+    if (!result.success) {
+      // Revert on error
+      toggleLike(postId, currentUserId);
+      console.error('Failed to like post:', result.error);
     }
   };
 
   const handleDelete = async (postId: number) => {
     if (!confirm('Are you sure you want to delete this post?')) return;
 
-    try {
-      const res = await fetch(`/api/feed/${postId}`, {
-        method: 'DELETE',
-      });
-
-      if (res.ok) {
-        setPosts(posts.filter(post => post.id !== postId));
-      } else {
-        alert('Failed to delete post');
-      }
-    } catch (error) {
-      console.error('Failed to delete post:', error);
+    const result = await deletePost(postId);
+    if (!result.success) {
       alert('Failed to delete post');
     }
   };
 
-  const isLikedByCurrentUser = (post: FeedPost) => {
+  const isLikedByCurrentUser = (post: any) => {
     const currentUserId = parseInt((session?.user as any)?.id || '0');
-    return post.likes.some(like => like.userId === currentUserId);
+    return post.likes.some((like: any) => like.userId === currentUserId);
   };
 
-  if (status === "loading" || loading) {
+  if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
