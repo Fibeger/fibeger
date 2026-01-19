@@ -6,7 +6,7 @@ HOSTPORT=${DATABASE_URL:-}
 
 echo "Starting entrypoint: running prisma migrate deploy (if DATABASE_URL configured)"
 if [ -n "${DATABASE_URL:-}" ]; then
-  npx prisma migrate deploy || true
+  npx prisma db push || true
 fi
 
 echo "Starting app"
