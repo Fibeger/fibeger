@@ -18,11 +18,13 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      console.log('Attempting sign in with:', username);
       const result = await signIn("credentials", {
         username,
         password,
         redirect: false,
       });
+      console.log('Sign in result:', result);
 
       if (!result?.ok) {
         setError(result?.error || "Invalid credentials");
@@ -76,7 +78,7 @@ export default function LoginPage() {
                 htmlFor="username"
                 className="block text-sm font-medium mb-3"
               >
-                Username
+                Username or Email
               </label>
               <input
                 id="username"
@@ -89,7 +91,7 @@ export default function LoginPage() {
                   borderColor: 'var(--border-color)',
                   color: 'var(--text-primary)',
                 }}
-                placeholder="Enter your username"
+                placeholder="Enter your username or email"
                 disabled={loading}
                 required
                 aria-required="true"

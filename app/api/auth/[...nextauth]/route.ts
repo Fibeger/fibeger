@@ -6,7 +6,7 @@ import bcrypt from "bcryptjs";
 export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
-      name: "Credentials",
+      name: "credentials",
       credentials: {
         username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
@@ -16,11 +16,17 @@ export const authOptions: AuthOptions = {
           throw new Error("Invalid credentials");
         }
 
-        const user = await prisma.user.findUnique({
-          where: { username: credentials.username },
+        const user = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { username: credentials.username },
+              { email: credentials.username },
+            ],
+          },
         });
 
         if (!user) {
+          console.log('User not found for:', credentials.username);
           throw new Error("User not found");
         }
 
@@ -30,9 +36,11 @@ export const authOptions: AuthOptions = {
         );
 
         if (!isPasswordValid) {
+          console.log('Invalid password for user:', user.username);
           throw new Error("Invalid password");
         }
 
+        console.log('Login successful for:', user.username);
         return {
           id: user.id.toString(),
           username: user.username,
@@ -95,13 +103,13 @@ export const authOptions: AuthOptions = {
         : 'next-auth.session-token',
       options: {
         httpOnly: true,
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        sameSite: process.env.NEXTAUTH_URL?.startsWith('https://') ? 'none' : 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.NEXTAUTH_URL?.startsWith('https://'),
       },
     },
   },
-  useSecureCookies: process.env.NODE_ENV === 'production',
+  useSecureCookies: process.env.NEXTAUTH_URL?.startsWith('https://'),
   secret: process.env.NEXTAUTH_SECRET,
 };
 
