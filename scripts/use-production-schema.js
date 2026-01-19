@@ -9,7 +9,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const schemaPath = path.join(__dirname, '../prisma/schema.prisma');
+const schemaPath = path.join(__dirname, '../prisma/schema.dev.prisma');
 const productionSchemaPath = path.join(__dirname, '../prisma/schema.production.prisma');
 
 // Only run this in production builds (Vercel sets NODE_ENV)

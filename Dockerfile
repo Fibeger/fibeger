@@ -4,7 +4,7 @@ WORKDIR /app
 # Install build deps
 RUN apt-get update && apt-get install -y python3 build-essential && rm -rf /var/lib/apt/lists/*
 
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json* prisma/ ./
 RUN npm install --legacy-peer-deps
 
 COPY . .
