@@ -1,0 +1,22 @@
+# Replace 'yourdomain.com' with your actual domain
+fibeger.com {
+    reverse_proxy app:3000
+    handle_path /minio/* {
+        uri strip_prefix /minio
+        reverse_proxy minio:9000
+    }
+}
+
+# Optional: Redirect HTTP to HTTPS
+http://fibeger.com {
+    redir https://fibeger.com{uri} permanent
+}
+
+# Minio console
+minio.fibeger.com {
+    reverse_proxy minio:9001
+}
+
+http://minio.fibeger.com {
+    redir https://minio.fibeger.com{uri} permanent
+}
