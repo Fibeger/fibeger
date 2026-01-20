@@ -22,15 +22,18 @@ export default function LoginPage() {
       const result = await signIn("credentials", {
         username,
         password,
-        redirect: false,
+        redirect: true,
+        callbackUrl: "/feed",
       });
       console.log('Sign in result:', result);
 
+      // Since redirect: true, this code won't run on success
       if (!result?.ok) {
         setError(result?.error || "Invalid credentials");
         return;
       }
 
+      // This won't be reached on success
       router.push("/feed");
     } catch (err) {
       setError("An error occurred. Please try again.");
