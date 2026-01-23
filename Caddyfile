@@ -21,8 +21,8 @@ http://127.0.0.1:8080 {
 	reverse_proxy @minioConsole minio:9001
 
 	# MinIO S3 API under /minio on apex
-	reverse_proxy /minio/* minio:9000 {
-		uri strip_prefix /minio
+	handle_path /minio/* {
+		reverse_proxy minio:9000
 	}
 
 	# Default: Next.js app (catch-all)
