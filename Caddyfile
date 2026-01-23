@@ -2,7 +2,7 @@
 	auto_https off
 }
 
-http://127.0.0.1:8080 {
+:8080 {
 	log {
 		output stdout
 		format console
