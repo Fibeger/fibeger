@@ -45,7 +45,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.IMAGE_REF }}
+          tags: |
+            ${{ env.IMAGE_REF }}
+            ghcr.io/${{ env.REPO_LC }}:latest
 
   deploy:
     runs-on: ubuntu-latest
