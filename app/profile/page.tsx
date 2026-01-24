@@ -495,7 +495,7 @@ export default function ProfilePage() {
                       className="hidden"
                     />
                     <div className="text-center">
-                      <div className="text-4xl mb-2">🖼️</div>
+                      <div className="text-4xl mb-2"><span className="material-symbols-outlined">panorama</span></div>
                       <p className="font-medium" style={{ color: 'var(--text-secondary)' }}>
                         Click to add a banner
                       </p>
@@ -529,7 +529,7 @@ export default function ProfilePage() {
                           disabled={uploadingAvatar}
                           className="hidden"
                         />
-                        📷
+                        <span className="material-symbols-outlined p-1">photo_camera_front</span>
                       </label>
                     </div>
                   </div>
@@ -712,7 +712,11 @@ export default function ProfilePage() {
                           className="w-full px-8 py-3 text-white rounded-md transition font-medium"
                           style={{ backgroundColor: profile.personalityBadge ? 'var(--text-tertiary)' : profile.themeColor || 'var(--accent)' }}
                         >
-                          {profile.personalityBadge ? '🔄 Retake Test' : '✨ Take PEAS Test'}
+                          <div className="flex items-center">
+                          <span className="material-symbols-outlined">{profile.personalityBadge ? 'refresh' : 'local_fire_department'}</span>
+                          <div className="ml-2">{profile.personalityBadge ? 'Retake Test' : 'Take PEAS Test'}</div>
+
+                          </div>
                         </button>
                       </>
                     )}
@@ -1068,8 +1072,8 @@ export default function ProfilePage() {
                     
                     <div className="flex items-center justify-between p-5 rounded-lg" style={{ backgroundColor: 'var(--bg-primary)' }}>
                       <div className="flex-1">
-                        <label className="block text-base font-medium mb-1 cursor-pointer" style={{ color: 'var(--text-primary)' }}>
-                          🔔 Notification Sounds
+                        <label className="block text-base font-medium mb-1 cursor-pointer flex  items-center" style={{ color: 'var(--text-primary)' }}>
+                          <span className="material-symbols-outlined">notifications</span> <div className="ml-2">Notification Sounds</div>
                         </label>
                         <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
                           Play a sound when you receive new messages or notifications
@@ -1093,8 +1097,8 @@ export default function ProfilePage() {
 
                     <div className="flex items-center justify-between p-5 rounded-lg" style={{ backgroundColor: 'var(--bg-primary)' }}>
                       <div className="flex-1">
-                        <label className="block text-base font-medium mb-1 cursor-pointer" style={{ color: 'var(--text-primary)' }}>
-                          🖥️ Browser Notifications
+                        <label className="block text-base font-medium mb-1 cursor-pointer flex items-center" style={{ color: 'var(--text-primary)' }}>
+                          <span className="material-symbols-outlined">desktop_windows</span> <div className="ml-2">Browser Notifications</div>
                         </label>
                         <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
                           {browserNotificationsSupported 
@@ -1145,8 +1149,8 @@ export default function ProfilePage() {
 
                     <div className="flex items-center justify-between p-5 rounded-lg" style={{ backgroundColor: 'var(--bg-primary)' }}>
                       <div className="flex-1">
-                        <label className="block text-base font-medium mb-1 cursor-pointer" style={{ color: 'var(--text-primary)' }}>
-                          🏆 Show Personality Badge
+                        <label className="block text-base font-medium mb-1 cursor-pointer flex items-center" style={{ color: 'var(--text-primary)' }}>
+                          <span className="material-symbols-outlined">trophy</span> <div className="ml-2">Show Personality Badge</div>
                         </label>
                         <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
                           Display your personality quiz badge on your profile

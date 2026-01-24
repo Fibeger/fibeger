@@ -97,21 +97,21 @@ export default function Navbar() {
               className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-all focus:outline-2 focus:outline-yellow-400 focus:outline-offset-2"
               aria-label="Messages"
             >
-              💬
+              <span className="material-symbols-outlined" aria-hidden="true">message</span>
             </Link>
             <Link
               href="/friends"
               className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-all focus:outline-2 focus:outline-yellow-400 focus:outline-offset-2"
               aria-label="Friends"
             >
-              👥
+              <span className="material-symbols-outlined" aria-hidden="true">diversity_1</span>
             </Link>
             <Link
               href="/profile"
               className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-all focus:outline-2 focus:outline-yellow-400 focus:outline-offset-2"
               aria-label="Profile"
             >
-              👤
+              <span className="material-symbols-outlined" aria-hidden="true">person</span>
             </Link>
           </div>
 

@@ -285,8 +285,8 @@ export default function Sidebar() {
   };
 
   const navItems = [
-    { href: '/feed', label: 'Feed', icon: '📷' },
-    { href: '/friends', label: 'Friends', icon: '👥' },
+    { href: '/feed', label: 'Feed', icon: 'camera' },
+    { href: '/friends', label: 'Friends', icon: 'diversity_1' },
   ];
 
   return (
@@ -362,7 +362,7 @@ export default function Sidebar() {
               }}
               aria-current={isActive(item.href) ? 'page' : undefined}
             >
-              <span className="text-xl" aria-hidden="true">{item.icon}</span>
+              <span className="material-symbols-outlined" aria-hidden="true">{item.icon}</span>
               <span className="text-base">{item.label}</span>
             </Link>
           ))}

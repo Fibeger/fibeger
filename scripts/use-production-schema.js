@@ -12,8 +12,8 @@ const path = require('path');
 const schemaPath = path.join(__dirname, '../prisma/schema.dev.prisma');
 const productionSchemaPath = path.join(__dirname, '../prisma/schema.prisma');
 
-// Only run this in production builds (Vercel sets NODE_ENV)
-if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+// Only run this in production builds
+if (process.env.NODE_ENV === 'production') {
   console.log('📦 Using production schema (PostgreSQL) for build...');
   
   if (fs.existsSync(productionSchemaPath)) {

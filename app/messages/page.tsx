@@ -1128,7 +1128,7 @@ function MessagesContent() {
                         <img
                           src={groupChat.avatar}
                           alt={groupChat.name}
-                          className="w-20 h-20 rounded-full"
+                          className="w-20 h-20 rounded-full flex-shrink-0 object-cover"
                         />
                       ) : (
                         <div
@@ -1212,7 +1212,7 @@ function MessagesContent() {
                                 <img
                                   src={friend.avatar}
                                   alt={friend.username}
-                                  className="w-6 h-6 rounded-full"
+                                  className="w-6 h-6 rounded-full flex-shrink-0 object-cover"
                                 />
                               ) : (
                                 <div
@@ -1241,7 +1241,7 @@ function MessagesContent() {
                             <img
                               src={member.user.avatar}
                               alt={member.user.username}
-                              className="w-8 h-8 rounded-full"
+                              className="w-8 h-8 rounded-full flex-shrink-0 object-cover"
                             />
                           ) : (
                             <div
@@ -1305,7 +1305,7 @@ function MessagesContent() {
                   <img
                     src={chatAvatar}
                     alt=""
-                    className="w-20 h-20 rounded-full mb-4"
+                    className="w-2 h-2 rounded-full flex-shrink-0 object-cover mb-4"
                   />
                 ) : (
                   <div
@@ -1347,7 +1347,7 @@ function MessagesContent() {
                               <img
                                 src={(session?.user as any)?.avatar}
                                 alt="You"
-                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
+                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0 object-cover"
                               />
                             ) : (
                               <div
@@ -1362,7 +1362,7 @@ function MessagesContent() {
                               <img
                                 src={msg.sender.avatar}
                                 alt={msg.sender.username}
-                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
+                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0 object-cover"
                               />
                             ) : (
                               <div
@@ -1774,7 +1774,7 @@ function MessagesContent() {
                             <img
                               src={user.avatar}
                               alt={user.username}
-                              className="w-8 h-8 rounded-full"
+                              className="w-8 h-8 rounded-full flex-shrink-0 object-cover"
                             />
                           ) : (
                             <div

@@ -103,13 +103,13 @@ export default function NotificationBell() {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'friend_request':
-        return '👥';
+        return 'diversity_1';
       case 'message':
-        return '💬';
+        return 'message';
       case 'group_invite':
-        return '🎉';
+        return 'celebration';
       default:
-        return '🔔';
+        return 'notifications';
     }
   };
 
@@ -220,7 +220,7 @@ export default function NotificationBell() {
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = !notification.read ? 'var(--hover-light)' : 'transparent'}
                   >
                     <div className="flex gap-3">
-                      <div className="text-2xl flex-shrink-0">
+                      <div className="material-symbols-outlined text-2xl flex-shrink-0">
                         {getNotificationIcon(notification.type)}
                       </div>
                       <div className="flex-1 min-w-0">

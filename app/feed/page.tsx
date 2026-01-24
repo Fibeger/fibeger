@@ -650,9 +650,9 @@ export default function FeedPage() {
                   </p>
                 </div>
               </label>
-              <div className="text-2xl">
-                {isPublic ? '🌍' : '👥'}
-              </div>
+              <span className="material-symbols-outlined text-2xl">
+                {isPublic ? 'public' : 'diversity_1'}
+              </span>
             </div>
 
             {/* Upload Button */}
