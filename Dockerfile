@@ -2,56 +2,48 @@
     FROM oven/bun:1 AS build
     WORKDIR /app
     
-    # (Optional) native build deps for packages with native parts
-    # RUN apt-get update && apt-get install -y --no-install-recommends \
-    #     python3 build-essential \
-    #  && rm -rf /var/lib/apt/lists/*
-    
-    # Copy lock/manifest first for better layer caching
+    # Copy lock/manifest first for layer caching
     COPY package.json bun.lock* bun.lockb* ./
     RUN bun install --frozen-lockfile || bun install
     
     # Copy source
     COPY . .
     
-    # If you rewrite schema during build as before:
+    # If you need to swap schema for production (optional)
     RUN cp prisma/schema.production.prisma prisma/schema.prisma || true
     
-    # Generate Prisma client at build time with Bun
+    # Generate Prisma client at build time
     RUN bunx --bun prisma generate
     
     # Build Next.js (standalone)
     ENV NODE_ENV=production
     RUN bun --bun next build
     
-# ---------- Runtime stage (Bun) ----------
+    
+    # ---------- Runtime stage (Bun) ----------
     FROM oven/bun:1 AS runner
     WORKDIR /app
     
-    
     # Copy the standalone server + static assets + public files
-    COPY --from=build /app/.next/standalone ./
+    COPY --from=build /app/.next/standalone ./      # includes server.js and node_modules needed by standalone
     COPY --from=build /app/.next/static ./.next/static
     COPY --from=build /app/public ./public
-
-    # Prisma schema & package.json for npx and node runtime
+    
+    # Bring prisma schema (not strictly required for runtime unless you rely on it)
     COPY --from=build /app/prisma ./prisma
+    
+    # If you rely on package.json for runtime metadata (optional)
     COPY --from=build /app/package.json ./package.json
-
     
-    # If you want `bunx prisma` available, keep prisma CLI in node_modules:
-    # copy only @prisma/* and prisma binaries instead of full node_modules, OR
-    # copy the full node_modules if simpler for now. The simplest is:
-    COPY --from=build /app/node_modules ./node_modules
-    
+    # Make sure runtime files are owned by 'bun' user to avoid EACCES
+    RUN chown -R bun:bun /app
     USER bun
+    
     ENV NODE_ENV=production
     ENV PORT=3000
+    ENV HOSTNAME=0.0.0.0
     EXPOSE 3000
     
-    # - run prisma db push if DATABASE_URL is set (don’t fail the container if it’s not ready)
-    # - start Next's standalone server (server.js is emitted by standalone)
-    CMD ["sh", "-lc", "echo 'Running prisma db push (if DATABASE_URL)'; \
-      [ -n \"${DATABASE_URL:-}\" ] && bunx --bun prisma db push || true; \
-      echo 'Starting app'; bun --bun server.js"]
-    
+    # Recommended in prod: don't modify DB schema on boot. Apply migrations out-of-band:
+    #  e.g., 'prisma migrate deploy' in CI/CD or a one-off job.
+    CMD ["sh", "-lc", "echo 'Starting app'; bun --bun server.js"]
