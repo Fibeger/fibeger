@@ -25,7 +25,7 @@
     WORKDIR /app
     
     # Copy the standalone server + static assets + public files
-    COPY --from=build /app/.next/standalone ./      # includes server.js and node_modules needed by standalone
+    COPY --from=build /app/.next/standalone ./
     COPY --from=build /app/.next/static ./.next/static
     COPY --from=build /app/public ./public
     
