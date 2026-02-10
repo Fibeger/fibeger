@@ -8,7 +8,7 @@
 	
 	# MinIO console (subdomain)
 	@minioConsole host minio.fibeger.com
-	reverse_proxy @minioConsole minio:9001 {
+	reverse_proxy @minioConsole 127.0.0.1:9001 {
 		header_up X-Real-IP {http.request.header.CF-Connecting-IP}
 		header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
 	}
@@ -17,14 +17,14 @@
 	@minioAPI path /minio*
 	handle @minioAPI {
 		uri strip_prefix /minio
-		reverse_proxy minio:9000 {
+		reverse_proxy 127.0.0.1:9000 {
 			header_up X-Real-IP {http.request.header.CF-Connecting-IP}
 			header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
 		}
 	}
 
 	# Default: Next.js app (everything else)
-	reverse_proxy app:3000 {
+	reverse_proxy 127.0.0.1:3000 {
 		header_up X-Real-IP {http.request.header.CF-Connecting-IP}
 		header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
 	}
