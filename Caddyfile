@@ -2,7 +2,7 @@
 	auto_https off
 }
 
-:8080 {
+:80 {
 	log {
 		output stdout
 		format console
