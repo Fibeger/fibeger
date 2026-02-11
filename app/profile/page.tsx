@@ -7,6 +7,8 @@ import PersonalityTestModal from '../components/PersonalityTestModal';
 import FlagEmoji from '../components/FlagEmoji';
 import personalityTestData from '../lib/personalityTest.json';
 import { useBrowserNotifications } from '../hooks/useBrowserNotifications';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGithub, faInstagram, faLinkedin, faSteam, faXTwitter } from '@fortawesome/free-brands-svg-icons';
 
 interface UserProfile {
   id: number;
@@ -574,13 +576,13 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-4 mt-4 flex-wrap text-sm font-medium" style={{ color: 'var(--text-tertiary)' }}>
                       {profile.city && (
                         <div className="flex items-center gap-1">
-                          <span>📍</span>
+                          <span className="material-symbols-outlined" aria-hidden="true">location_on</span>
                           <span>{profile.city}</span>
                         </div>
                       )}
                       {profile.birthday && (
                         <div className="flex items-center gap-1">
-                          <span>🎂</span>
+                          <span className="material-symbols-outlined" aria-hidden="true">cake</span>
                           <span>{profile.birthday}</span>
                         </div>
                       )}
@@ -592,7 +594,7 @@ export default function ProfilePage() {
                           className="flex items-center gap-1 hover:underline"
                           style={{ color: profile.themeColor || 'var(--accent)' }}
                         >
-                          <span>🔗</span>
+                          <span className="material-symbols-outlined" aria-hidden="true">link_2</span>
                           <span>{profile.website}</span>
                         </a>
                       )}
@@ -608,27 +610,27 @@ export default function ProfilePage() {
                             <div className="flex items-center gap-4 mt-4">
                               {links.twitter && (
                                 <a href={`https://twitter.com/${links.twitter}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="Twitter/X">
-                                  𝕏
+                                  <FontAwesomeIcon icon={faXTwitter} inverse/>
                                 </a>
                               )}
                               {links.github && (
                                 <a href={`https://github.com/${links.github}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="GitHub">
-                                  🐙
+                                  <FontAwesomeIcon icon={faGithub} inverse/>
                                 </a>
                               )}
                               {links.instagram && (
                                 <a href={`https://instagram.com/${links.instagram}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="Instagram">
-                                  📷
+                                  <FontAwesomeIcon icon={faInstagram} inverse/>
                                 </a>
                               )}
                               {links.linkedin && (
                                 <a href={`https://linkedin.com/in/${links.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="LinkedIn">
-                                  💼
+                                  <FontAwesomeIcon icon={faLinkedin} inverse/>
                                 </a>
                               )}
                               {profile.steamUsername && (
                                 <a href={`https://steamcommunity.com/id/${profile.steamUsername}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="Steam">
-                                  🎮
+                                  <FontAwesomeIcon icon={faSteam} inverse/>
                                 </a>
                               )}
                             </div>
@@ -909,7 +911,7 @@ export default function ProfilePage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                          𝕏 / Twitter Username
+                        <FontAwesomeIcon icon={faXTwitter} inverse /> <span className="ml-2">Twitter Username</span>
                         </label>
                         <input
                           type="text"
@@ -924,7 +926,7 @@ export default function ProfilePage() {
 
                       <div>
                         <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                          🐙 GitHub Username
+                        <FontAwesomeIcon icon={faGithub} inverse /> <span className="ml-2">GitHub Username</span>
                         </label>
                         <input
                           type="text"
@@ -939,7 +941,7 @@ export default function ProfilePage() {
 
                       <div>
                         <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                          📷 Instagram Username
+                        <FontAwesomeIcon icon={faInstagram} inverse /> <span className="ml-2">Instagram Username</span>
                         </label>
                         <input
                           type="text"
@@ -954,7 +956,7 @@ export default function ProfilePage() {
 
                       <div>
                         <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                          💼 LinkedIn Username
+                        <FontAwesomeIcon icon={faLinkedin} inverse /> <span className="ml-2">LinkedIn Username</span>
                         </label>
                         <input
                           type="text"
@@ -969,7 +971,7 @@ export default function ProfilePage() {
 
                       <div>
                         <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                          🎮 Steam Username
+                        <FontAwesomeIcon icon={faSteam} inverse /> <span className="ml-2">Steam Username</span>
                         </label>
                         <input
                           type="text"

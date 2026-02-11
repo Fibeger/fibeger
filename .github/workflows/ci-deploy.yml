@@ -51,6 +51,10 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://fibeger.com
+      description: "Production environment"
     needs: [build-and-push]
     env:
       IMAGE_REF: ${{ needs.build-and-push.outputs.image_ref }}
