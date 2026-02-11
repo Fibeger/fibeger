@@ -1,4 +1,4 @@
-FROM node:20-bullseye-slim AS base
+FROM node:25-bullseye-slim AS base
 WORKDIR /app
 
 # Install build deps
@@ -16,7 +16,7 @@ RUN cp prisma/schema.production.prisma prisma/schema.prisma && npx prisma genera
 ENV NODE_ENV=production
 RUN npm run build:container
 
-FROM node:20-bullseye-slim AS runner
+FROM node:25-bullseye-slim AS runner
 WORKDIR /app
 
 # Only copy production files
