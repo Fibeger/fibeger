@@ -5,7 +5,28 @@ import { prisma } from '@/app/lib/prisma';
 
 const MAX_CAPTION_LENGTH = 500;
 
-// GET - Fetch feed posts (public or friends)
+const feedPostInclude = {
+  user: {
+    select: {
+      id: true,
+      username: true,
+      nickname: true,
+      avatar: true,
+    },
+  },
+  likes: {
+    select: {
+      userId: true,
+    },
+  },
+  _count: {
+    select: {
+      likes: true,
+    },
+  },
+};
+
+// GET - Fetch feed posts (public or friends, or by userId for profile pages)
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,87 +34,68 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = parseInt((session.user as any).id);
+    const viewerId = parseInt((session.user as any).id);
     const { searchParams } = new URL(request.url);
     const feedType = searchParams.get('type') || 'friends'; // 'friends' or 'public'
+    const targetUserIdParam = searchParams.get('userId');
+
+    // Profile page: fetch posts for a specific user
+    if (targetUserIdParam) {
+      const targetUserId = parseInt(targetUserIdParam);
+      const isOwnProfile = viewerId === targetUserId;
+
+      // Check if viewer is friends with target user
+      let isFriend = false;
+      if (!isOwnProfile) {
+        const friendship = await prisma.friend.findFirst({
+          where: {
+            OR: [
+              { userId: viewerId, friendId: targetUserId },
+              { userId: targetUserId, friendId: viewerId },
+            ],
+          },
+        });
+        isFriend = !!friendship;
+      }
+
+      // Own profile or friends can see all posts; others only see public posts
+      const whereClause = isOwnProfile || isFriend
+        ? { userId: targetUserId }
+        : { userId: targetUserId, isPublic: true };
+
+      const posts = await prisma.feedPost.findMany({
+        where: whereClause,
+        include: feedPostInclude,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      return NextResponse.json(posts);
+    }
 
     let posts;
 
     if (feedType === 'public') {
-      // Fetch all public posts
       posts = await prisma.feedPost.findMany({
-        where: {
-          isPublic: true,
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              nickname: true,
-              avatar: true,
-            },
-          },
-          likes: {
-            select: {
-              userId: true,
-            },
-          },
-          _count: {
-            select: {
-              likes: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
+        where: { isPublic: true },
+        include: feedPostInclude,
+        orderBy: { createdAt: 'desc' },
       });
     } else {
-      // Fetch posts from friends (existing behavior)
-      // Get all friend IDs for the current user
+      // Fetch posts from the user and their friends (friends-only posts)
       const friends = await prisma.friend.findMany({
-        where: {
-          userId: userId,
-        },
-        select: {
-          friendId: true,
-        },
+        where: { userId: viewerId },
+        select: { friendId: true },
       });
 
       const friendIds = friends.map(f => f.friendId);
 
-      // Fetch posts from the user and their friends (friends-only posts)
       posts = await prisma.feedPost.findMany({
         where: {
-          isPublic: false, // Only friends-only posts
-          userId: {
-            in: [userId, ...friendIds],
-          },
+          isPublic: false,
+          userId: { in: [viewerId, ...friendIds] },
         },
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              nickname: true,
-              avatar: true,
-            },
-          },
-          likes: {
-            select: {
-              userId: true,
-            },
-          },
-          _count: {
-            select: {
-              likes: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
+        include: feedPostInclude,
+        orderBy: { createdAt: 'desc' },
       });
     }
 

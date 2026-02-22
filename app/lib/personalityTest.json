@@ -177,6 +177,138 @@
           "weights": { "sami": 1 }
         }
       ]
+    },
+    {
+      "id": 9,
+      "question": "What's your ideal weekend activity?",
+      "answers": [
+        {
+          "text": "Counting my coins",
+          "weights": { "jew": 1 }
+        },
+        {
+          "text": "Raiding a village",
+          "weights": { "viking": 1 }
+        },
+        {
+          "text": "Coding a side project",
+          "weights": { "nerd": 1 }
+        },
+        {
+          "text": "Gaming with the boys",
+          "weights": { "gamer": 1 }
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "question": "What's your dream job?",
+      "answers": [
+        {
+          "text": "Game developer",
+          "weights": { "gamer": 1 }
+        },
+        {
+          "text": "Data scientist",
+          "weights": { "nerd": 1 }
+        },
+        {
+          "text": "Viking explorer",
+          "weights": { "viking": 1 }
+        },
+        {
+          "text": "Accountant",
+          "weights": { "jew": 1 }
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "question": "What's your go-to drink?",
+      "answers": [
+        {
+          "text": "Energy drinks",
+          "weights": { "gamer": 1 }
+        },
+        {
+          "text": "Mead",
+          "weights": { "viking": 1 }
+        },
+        {
+          "text": "Black coffee",
+          "weights": { "nerd": 1 }
+        },
+        {
+          "text": "Champagne",
+          "weights": { "normal": 1 }
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "question": "What would you spend 1000kr on?",
+      "answers": [
+        {
+          "text": "New GPU",
+          "weights": { "gamer": 1 }
+        },
+        {
+          "text": "Programming course",
+          "weights": { "nerd": 1 }
+        },
+        {
+          "text": "Axe and shield",
+          "weights": { "viking": 1 }
+        },
+        {
+          "text": "Save it",
+          "weights": { "jew": 1 }
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "question": "What's your spirit animal?",
+      "answers": [
+        {
+          "text": "A reindeer",
+          "weights": { "sami": 1 }
+        },
+        {
+          "text": "A raven",
+          "weights": { "viking": 1 }
+        },
+        {
+          "text": "An owl",
+          "weights": { "nerd": 1 }
+        },
+        {
+          "text": "A wolf with a headset",
+          "weights": { "gamer": 1 }
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "question": "What's your favourite historical era?",
+      "answers": [
+        {
+          "text": "Ancient Rome",
+          "weights": { "normal": 1 }
+        },
+        {
+          "text": "The Viking Age",
+          "weights": { "viking": 1 }
+        },
+        {
+          "text": "The Information Age",
+          "weights": { "nerd": 1 }
+        },
+        {
+          "text": "The golden age of gaming (90s-2000s)",
+          "weights": { "gamer": 1 }
+        }
+      ]
     }
   ],
   "badges": [
@@ -207,6 +339,27 @@
       "emoji": "🦌",
       "description": "Sami motherfuckers who brought Johannes to the world",
       "color": "#FF8C00"
+    },
+    {
+      "id": "viking",
+      "name": "The Viking",
+      "emoji": "🪓",
+      "description": "Norse warrior who pillages and plunders with honour",
+      "color": "#5865F2"
+    },
+    {
+      "id": "nerd",
+      "name": "The Nerd",
+      "emoji": "🤓",
+      "description": "Intellectual galaxy-brain who fixes the printer no one asked about",
+      "color": "#22C55E"
+    },
+    {
+      "id": "gamer",
+      "name": "The Gamer",
+      "emoji": "🎮",
+      "description": "Sleep-deprived legend who carries the team every single time",
+      "color": "#A855F7"
     }
   ]
 }

@@ -2,6 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import PersonalityTestModal from '../components/PersonalityTestModal';
 import FlagEmoji from '../components/FlagEmoji';
@@ -10,7 +11,7 @@ import UserAvatar from '../components/UserAvatar';
 import personalityTestData from '../lib/personalityTest.json';
 import { useBrowserNotifications } from '../hooks/useBrowserNotifications';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGithub, faInstagram, faLinkedin, faSteam, faXTwitter } from '@fortawesome/free-brands-svg-icons';
+import { faGithub, faInstagram, faSteam, faXTwitter, faDiscord, faYoutube, faTwitch } from '@fortawesome/free-brands-svg-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -64,8 +65,9 @@ interface SocialLinks {
   twitter?: string;
   github?: string;
   instagram?: string;
-  linkedin?: string;
-  steam?: string;
+  discord?: string;
+  youtube?: string;
+  twitch?: string;
 }
 
 interface BadgeType {
@@ -74,6 +76,27 @@ interface BadgeType {
   emoji: string;
   description: string;
   color: string;
+}
+
+interface FeedPost {
+  id: number;
+  userId: number;
+  caption: string | null;
+  mediaUrl: string;
+  mediaType: string;
+  isPublic: boolean;
+  createdAt: string;
+  user: { id: number; username: string; nickname: string | null; avatar: string | null };
+  likes: { userId: number }[];
+  _count: { likes: number };
+}
+
+interface UserPreview {
+  id: number;
+  username: string;
+  nickname: string | null;
+  avatar: string | null;
+  themeColor: string | null;
 }
 
 const countries = [
@@ -133,6 +156,11 @@ export default function ProfilePage() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [showPersonalityTest, setShowPersonalityTest] = useState(false);
+  const [profileFeed, setProfileFeed] = useState<FeedPost[]>([]);
+  const [feedLoading, setFeedLoading] = useState(false);
+  const [profileFriends, setProfileFriends] = useState<UserPreview[]>([]);
+  const [friendsLoading, setFriendsLoading] = useState(false);
+  const [selectedFeedPost, setSelectedFeedPost] = useState<FeedPost | null>(null);
 
   const [formData, setFormData] = useState({
     nickname: '',
@@ -148,7 +176,9 @@ export default function ProfilePage() {
     twitter: '',
     github: '',
     instagram: '',
-    linkedin: '',
+    discord: '',
+    youtube: '',
+    twitch: '',
     interests: [] as string[],
     showPersonalityBadge: true,
     notificationSoundsEnabled: true,
@@ -203,7 +233,9 @@ export default function ProfilePage() {
           twitter: socialLinks.twitter || '',
           github: socialLinks.github || '',
           instagram: socialLinks.instagram || '',
-          linkedin: socialLinks.linkedin || '',
+          discord: socialLinks.discord || '',
+          youtube: socialLinks.youtube || '',
+          twitch: socialLinks.twitch || '',
           interests,
           showPersonalityBadge: data.showPersonalityBadge ?? true,
           notificationSoundsEnabled: data.notificationSoundsEnabled ?? true,
@@ -218,6 +250,43 @@ export default function ProfilePage() {
     }
   };
 
+  useEffect(() => {
+    if (!profile?.id) return;
+    fetchProfileFeed(profile.id);
+    fetchProfileFriends(profile.username);
+  }, [profile?.id]);
+
+  const fetchProfileFeed = async (userId: number) => {
+    setFeedLoading(true);
+    try {
+      const res = await fetch(`/api/feed?userId=${userId}`);
+      if (res.ok) setProfileFeed(await res.json());
+    } catch { /* silent */ } finally {
+      setFeedLoading(false);
+    }
+  };
+
+  const fetchProfileFriends = async (username: string) => {
+    setFriendsLoading(true);
+    try {
+      const res = await fetch(`/api/profile/${username}/friends`);
+      if (res.ok) setProfileFriends(await res.json());
+    } catch { /* silent */ } finally {
+      setFriendsLoading(false);
+    }
+  };
+
+  const handleFeedLike = async (postId: number) => {
+    try {
+      const res = await fetch(`/api/feed/${postId}/like`, { method: 'POST' });
+      if (res.ok) {
+        const updated = await res.json();
+        setProfileFeed((prev) => prev.map((p) => p.id === postId ? { ...p, likes: updated.likes, _count: updated._count } : p));
+        if (selectedFeedPost?.id === postId) setSelectedFeedPost({ ...selectedFeedPost, likes: updated.likes, _count: updated._count });
+      }
+    } catch { /* silent */ }
+  };
+
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -225,7 +294,9 @@ export default function ProfilePage() {
         twitter: formData.twitter || undefined,
         github: formData.github || undefined,
         instagram: formData.instagram || undefined,
-        linkedin: formData.linkedin || undefined,
+        discord: formData.discord || undefined,
+        youtube: formData.youtube || undefined,
+        twitch: formData.twitch || undefined,
       };
 
       const res = await fetch('/api/profile', {
@@ -260,6 +331,29 @@ export default function ProfilePage() {
       }
     } catch {
       showMessage('Error updating profile', 'error');
+    }
+  };
+
+  const handlePreferencesSave = async () => {
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          showPersonalityBadge: formData.showPersonalityBadge,
+          notificationSoundsEnabled: formData.notificationSoundsEnabled,
+          browserNotificationsEnabled: formData.browserNotificationsEnabled,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setProfile(data);
+        showMessage('Preferences saved', 'success');
+      } else {
+        showMessage('Failed to save preferences', 'error');
+      }
+    } catch {
+      showMessage('Error saving preferences', 'error');
     }
   };
 
@@ -424,11 +518,12 @@ export default function ProfilePage() {
             {/* Profile Header Card */}
             <Card className="overflow-hidden">
               {/* Banner */}
-              <div className="relative w-full h-48 sm:h-64" style={{ backgroundColor: 'var(--bg-primary)' }}>
+              <div className="relative w-full h-48 sm:h-64 group" style={{ backgroundColor: 'var(--bg-primary)' }}>
                 {profile.banner ? (
                   <>
                     <img src={profile.banner} alt="Profile banner" className="w-full h-full object-cover" />
-                    <div className="absolute top-4 right-4 flex gap-2">
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors pointer-events-none" />
+                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                       <label className="px-4 py-2 text-white rounded-md cursor-pointer transition font-medium text-sm" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
                         <input type="file" accept="image/*" onChange={handleBannerUpload} disabled={uploadingAvatar} className="hidden" />
                         Change Banner
@@ -462,9 +557,9 @@ export default function ProfilePage() {
                         themeColor={profile.themeColor}
                         style={{ borderColor: accentColor }}
                       />
-                      <label className="absolute bottom-0 right-0 text-white p-3 rounded-full cursor-pointer transition" style={{ backgroundColor: accentColor }}>
+                      <label className="absolute inset-0 flex items-center justify-center text-white rounded-full cursor-pointer opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
                         <input type="file" accept="image/*" onChange={handleAvatarUpload} disabled={uploadingAvatar} className="hidden" />
-                        <span className="material-symbols-outlined">photo_camera_front</span>
+                        <span className="material-symbols-outlined text-2xl">photo_camera_front</span>
                       </label>
                     </div>
                   </div>
@@ -513,7 +608,9 @@ export default function ProfilePage() {
                               {links.twitter && <a href={`https://twitter.com/${links.twitter}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition"><FontAwesomeIcon icon={faXTwitter} inverse /></a>}
                               {links.github && <a href={`https://github.com/${links.github}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition"><FontAwesomeIcon icon={faGithub} inverse /></a>}
                               {links.instagram && <a href={`https://instagram.com/${links.instagram}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition"><FontAwesomeIcon icon={faInstagram} inverse /></a>}
-                              {links.linkedin && <a href={`https://linkedin.com/in/${links.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition"><FontAwesomeIcon icon={faLinkedin} inverse /></a>}
+                              {links.discord && <a href={`https://discord.com/users/${links.discord}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition"><FontAwesomeIcon icon={faDiscord} inverse /></a>}
+                              {links.youtube && <a href={`https://youtube.com/@${links.youtube}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition"><FontAwesomeIcon icon={faYoutube} inverse /></a>}
+                              {links.twitch && <a href={`https://twitch.tv/${links.twitch}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition"><FontAwesomeIcon icon={faTwitch} inverse /></a>}
                               {profile.steamUsername && <a href={`https://steamcommunity.com/id/${profile.steamUsername}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition"><FontAwesomeIcon icon={faSteam} inverse /></a>}
                             </div>
                           );
@@ -538,41 +635,15 @@ export default function ProfilePage() {
                       } catch {}
                       return null;
                     })()}
-
-                    {/* Personality Badge */}
-                    {(() => {
-                      const badge = getUserBadge();
-                      if (badge && profile.showPersonalityBadge) {
-                        return (
-                          <div className="mt-4 px-4 py-3 rounded-lg inline-flex items-center gap-3" style={{ backgroundColor: `${badge.color}20`, border: `2px solid ${badge.color}` }}>
-                            <span className="text-3xl">{badge.emoji}</span>
-                            <div>
-                              <p className="font-bold text-sm" style={{ color: badge.color }}>{badge.name}</p>
-                              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{badge.description}</p>
-                            </div>
-                          </div>
-                        );
-                      }
-                      return null;
-                    })()}
                   </div>
 
                   <div className="w-full sm:w-auto flex flex-col gap-3">
                     {editing ? (
                       <Button variant="destructive" onClick={() => setEditing(false)}>Cancel</Button>
                     ) : (
-                      <>
-                        <Button onClick={() => setEditing(true)} style={{ backgroundColor: accentColor }}>
-                          Edit Profile
-                        </Button>
-                        <Button
-                          onClick={() => setShowPersonalityTest(true)}
-                          style={{ backgroundColor: profile.personalityBadge ? 'var(--text-tertiary)' : accentColor }}
-                        >
-                          <span className="material-symbols-outlined mr-2">{profile.personalityBadge ? 'refresh' : 'local_fire_department'}</span>
-                          {profile.personalityBadge ? 'Retake Test' : 'Take PEAS Test'}
-                        </Button>
-                      </>
+                      <Button onClick={() => setEditing(true)} style={{ backgroundColor: accentColor }}>
+                        Edit Profile
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -673,14 +744,16 @@ export default function ProfilePage() {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {[
-                          { key: 'twitter', icon: faXTwitter, label: 'Twitter Username' },
+                          { key: 'twitter', icon: faXTwitter, label: 'Twitter / X Username' },
                           { key: 'github', icon: faGithub, label: 'GitHub Username' },
                           { key: 'instagram', icon: faInstagram, label: 'Instagram Username' },
-                          { key: 'linkedin', icon: faLinkedin, label: 'LinkedIn Username' },
+                          { key: 'discord', icon: faDiscord, label: 'Discord User ID' },
+                          { key: 'youtube', icon: faYoutube, label: 'YouTube Handle' },
+                          { key: 'twitch', icon: faTwitch, label: 'Twitch Username' },
                         ].map(({ key, icon, label }) => (
                           <div key={key} className="space-y-2">
                             <Label><FontAwesomeIcon icon={icon} inverse /> <span className="ml-2">{label}</span></Label>
-                            <Input value={(formData as any)[key]} onChange={(e) => setFormData({ ...formData, [key]: e.target.value })} placeholder="username" />
+                            <Input value={(formData as Record<string, unknown>)[key] as string} onChange={(e) => setFormData({ ...formData, [key]: e.target.value })} placeholder="username" />
                           </div>
                         ))}
                         <div className="space-y-2">
@@ -725,64 +798,6 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    <Separator />
-
-                    {/* Privacy & Preferences */}
-                    <div className="space-y-5">
-                      <h3 className="text-lg font-semibold">Privacy & Preferences</h3>
-
-                      {[
-                        {
-                          id: 'notification-sounds',
-                          icon: 'notifications',
-                          label: 'Notification Sounds',
-                          desc: 'Play a sound when you receive new messages or notifications',
-                          checked: formData.notificationSoundsEnabled,
-                          onChange: (v: boolean) => setFormData({ ...formData, notificationSoundsEnabled: v }),
-                          disabled: false,
-                        },
-                        {
-                          id: 'browser-notifications',
-                          icon: 'desktop_windows',
-                          label: 'Browser Notifications',
-                          desc: browserNotificationsSupported ? 'Show native notifications even when the tab is not focused' : 'Not supported in your browser',
-                          checked: formData.browserNotificationsEnabled && browserNotificationsSupported,
-                          onChange: async (v: boolean) => {
-                            if (!browserNotificationsSupported) return;
-                            if (v && browserNotificationPermission !== 'granted') {
-                              const result = await requestPermission();
-                              if (result !== 'granted') return;
-                            }
-                            setFormData({ ...formData, browserNotificationsEnabled: v });
-                          },
-                          disabled: !browserNotificationsSupported || browserNotificationPermission === 'denied',
-                        },
-                        {
-                          id: 'show-badge',
-                          icon: 'trophy',
-                          label: 'Show Personality Badge',
-                          desc: 'Display your personality quiz badge on your profile',
-                          checked: formData.showPersonalityBadge,
-                          onChange: (v: boolean) => setFormData({ ...formData, showPersonalityBadge: v }),
-                          disabled: false,
-                        },
-                      ].map((item) => (
-                        <div key={item.id} className="flex items-center justify-between p-5 rounded-lg" style={{ backgroundColor: 'var(--bg-primary)' }}>
-                          <div className="flex-1">
-                            <Label htmlFor={item.id} className="flex items-center gap-2 cursor-pointer font-medium text-base">
-                              <span className="material-symbols-outlined">{item.icon}</span>
-                              {item.label}
-                            </Label>
-                            <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>{item.desc}</p>
-                            {item.id === 'browser-notifications' && browserNotificationsSupported && browserNotificationPermission === 'denied' && (
-                              <p className="text-xs mt-2 font-semibold" style={{ color: 'var(--danger)' }}>Permission denied. Please enable in your browser settings.</p>
-                            )}
-                          </div>
-                          <Switch id={item.id} checked={item.checked} onCheckedChange={item.onChange} disabled={item.disabled} />
-                        </div>
-                      ))}
-                    </div>
-
                     <div className="flex flex-col sm:flex-row gap-4 pt-2">
                       <Button type="submit" className="flex-1 app-btn-success">Save Changes</Button>
                       <Button type="button" variant="destructive" className="flex-1" onClick={() => setEditing(false)}>Cancel</Button>
@@ -792,41 +807,272 @@ export default function ProfilePage() {
               </Card>
             )}
 
-            {/* Change Username */}
+            {/* Badges Section */}
             <Card>
               <CardHeader>
-                <CardTitle>Change Username</CardTitle>
-                <p className="text-sm font-medium" style={{ color: 'var(--text-tertiary)' }}>You can change your username once every 7 days.</p>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Badges</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowPersonalityTest(true)}
+                    style={{ color: accentColor }}
+                  >
+                    <span className="material-symbols-outlined mr-1 text-sm">
+                      {profile.personalityBadge ? 'refresh' : 'local_fire_department'}
+                    </span>
+                    {profile.personalityBadge ? 'Retake PEAS Test' : 'Take PEAS Test'}
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                {!canChangeUsername && profile.lastUsernameChange && (
-                  <Alert className="mb-6">
-                    <AlertDescription className="font-semibold">
-                      Available in {Math.ceil((new Date(profile.lastUsernameChange).getTime() + 7 * 24 * 60 * 60 * 1000 - Date.now()) / (24 * 60 * 60 * 1000))} day(s)
-                    </AlertDescription>
-                  </Alert>
-                )}
-                <form onSubmit={handleUsernameChange} className="space-y-4">
-                  <Input placeholder="New username" value={formData.newUsername} onChange={(e) => setFormData({ ...formData, newUsername: e.target.value })} disabled={!canChangeUsername} />
-                  <Button type="submit" disabled={!canChangeUsername} className="w-full" style={{ backgroundColor: canChangeUsername ? 'var(--accent)' : 'var(--text-tertiary)' }}>
-                    {canChangeUsername ? 'Change Username' : 'Cooldown Active'}
-                  </Button>
-                </form>
+                {(() => {
+                  const badge = getUserBadge();
+                  if (badge && profile.showPersonalityBadge) {
+                    return (
+                      <div className="flex flex-wrap gap-4">
+                        <div className="px-5 py-4 rounded-xl flex items-center gap-4" style={{ backgroundColor: `${badge.color}18`, border: `2px solid ${badge.color}40` }}>
+                          <span className="text-4xl">{badge.emoji}</span>
+                          <div>
+                            <p className="font-bold text-base" style={{ color: badge.color }}>{badge.name}</p>
+                            <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>{badge.description}</p>
+                            <p className="text-xs mt-1 font-medium" style={{ color: 'var(--text-tertiary)' }}>PEAS Personality Badge</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  if (!profile.personalityBadge) {
+                    return (
+                      <div className="text-center py-8">
+                        <span className="material-symbols-outlined text-5xl mb-3 block" style={{ color: 'var(--text-tertiary)' }}>emoji_events</span>
+                        <p className="font-medium" style={{ color: 'var(--text-secondary)' }}>No badges yet</p>
+                        <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>Take the PEAS test to earn your personality badge</p>
+                      </div>
+                    );
+                  }
+                  return (
+                    <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>Personality badge is hidden. You can show it in Settings.</p>
+                  );
+                })()}
               </CardContent>
             </Card>
 
-            {/* Danger Zone */}
-            <Card style={{ borderColor: 'var(--danger)', borderWidth: '2px' }}>
+            {/* Feed Section */}
+            <Card>
               <CardHeader>
-                <CardTitle style={{ color: 'var(--danger)' }}>Danger Zone</CardTitle>
-                <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                  Once you delete your account, there is no going back. All your data, messages, and connections will be permanently deleted.
-                </p>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <span className="material-symbols-outlined">camera</span>
+                    Posts
+                    {!feedLoading && <span className="text-sm font-normal ml-1" style={{ color: 'var(--text-tertiary)' }}>({profileFeed.length})</span>}
+                  </CardTitle>
+                  <Link href="/feed">
+                    <Button variant="ghost" size="sm" style={{ color: accentColor }}>View Feed</Button>
+                  </Link>
+                </div>
               </CardHeader>
               <CardContent>
-                <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
-                  Delete My Account
-                </Button>
+                {feedLoading ? (
+                  <div className="flex justify-center py-8">
+                    <span className="material-symbols-outlined animate-spin" style={{ color: 'var(--text-tertiary)' }}>progress_activity</span>
+                  </div>
+                ) : profileFeed.length === 0 ? (
+                  <div className="text-center py-8">
+                    <span className="material-symbols-outlined text-4xl mb-2 block" style={{ color: 'var(--text-tertiary)' }}>camera_alt</span>
+                    <p className="font-medium" style={{ color: 'var(--text-secondary)' }}>No posts yet</p>
+                    <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>Share something on the Feed!</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1.5">
+                    {profileFeed.slice(0, 15).map((post) => (
+                      <button
+                        key={post.id}
+                        onClick={() => setSelectedFeedPost(post)}
+                        className="relative aspect-square overflow-hidden rounded-lg group"
+                        style={{ backgroundColor: 'var(--bg-primary)' }}
+                      >
+                        {post.mediaType === 'video' ? (
+                          <video src={post.mediaUrl} className="w-full h-full object-cover" />
+                        ) : (
+                          <img src={post.mediaUrl} alt={post.caption || 'Post'} className="w-full h-full object-cover" />
+                        )}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <div className="flex items-center gap-1 text-white text-sm font-semibold">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
+                            {post._count.likes}
+                          </div>
+                        </div>
+                        {post.mediaType === 'video' && (
+                          <div className="absolute top-1.5 right-1.5 text-white">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Friends Section */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <span className="material-symbols-outlined">group</span>
+                    Friends
+                    {!friendsLoading && <span className="text-sm font-normal ml-1" style={{ color: 'var(--text-tertiary)' }}>({profileFriends.length})</span>}
+                  </CardTitle>
+                  <Link href="/friends">
+                    <Button variant="ghost" size="sm" style={{ color: accentColor }}>Manage</Button>
+                  </Link>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {friendsLoading ? (
+                  <div className="flex justify-center py-8">
+                    <span className="material-symbols-outlined animate-spin" style={{ color: 'var(--text-tertiary)' }}>progress_activity</span>
+                  </div>
+                ) : profileFriends.length === 0 ? (
+                  <div className="text-center py-8">
+                    <span className="material-symbols-outlined text-4xl mb-2 block" style={{ color: 'var(--text-tertiary)' }}>person_add</span>
+                    <p className="font-medium" style={{ color: 'var(--text-secondary)' }}>No friends yet</p>
+                    <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>Add friends to see them here</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                    {profileFriends.map((friend) => (
+                      <Link key={friend.id} href={`/profile/${friend.username}`} className="group flex flex-col items-center gap-2 text-center">
+                        <div className="transition-transform group-hover:scale-105">
+                          <UserAvatar
+                            src={friend.avatar}
+                            username={friend.username}
+                            size="lg"
+                            themeColor={friend.themeColor}
+                          />
+                        </div>
+                        <span className="text-xs font-medium truncate w-full text-center" style={{ color: 'var(--text-secondary)' }}>
+                          {friend.nickname || friend.username}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Settings Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span className="material-symbols-outlined">settings</span>
+                  Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-8">
+                {/* Account – Change Username */}
+                <div className="space-y-4">
+                  <h3 className="text-base font-semibold" style={{ color: 'var(--text-secondary)' }}>Account</h3>
+                  <div>
+                    <p className="text-sm font-medium mb-1">Change Username</p>
+                    <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>You can change your username once every 7 days.</p>
+                    {!canChangeUsername && profile.lastUsernameChange && (
+                      <Alert className="mb-4">
+                        <AlertDescription className="font-semibold">
+                          Available in {Math.ceil((new Date(profile.lastUsernameChange).getTime() + 7 * 24 * 60 * 60 * 1000 - Date.now()) / (24 * 60 * 60 * 1000))} day(s)
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    <form onSubmit={handleUsernameChange} className="flex gap-3">
+                      <Input
+                        placeholder="New username"
+                        value={formData.newUsername}
+                        onChange={(e) => setFormData({ ...formData, newUsername: e.target.value })}
+                        disabled={!canChangeUsername}
+                        className="flex-1"
+                      />
+                      <Button type="submit" disabled={!canChangeUsername} style={{ backgroundColor: canChangeUsername ? 'var(--accent)' : 'var(--text-tertiary)' }}>
+                        {canChangeUsername ? 'Change' : 'Cooldown'}
+                      </Button>
+                    </form>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Preferences */}
+                <div className="space-y-4">
+                  <h3 className="text-base font-semibold" style={{ color: 'var(--text-secondary)' }}>Preferences</h3>
+
+                  {[
+                    {
+                      id: 'notification-sounds',
+                      icon: 'notifications',
+                      label: 'Notification Sounds',
+                      desc: 'Play a sound when you receive new messages or notifications',
+                      checked: formData.notificationSoundsEnabled,
+                      onChange: (v: boolean) => setFormData({ ...formData, notificationSoundsEnabled: v }),
+                      disabled: false,
+                    },
+                    {
+                      id: 'browser-notifications',
+                      icon: 'desktop_windows',
+                      label: 'Browser Notifications',
+                      desc: browserNotificationsSupported ? 'Show native notifications even when the tab is not focused' : 'Not supported in your browser',
+                      checked: formData.browserNotificationsEnabled && browserNotificationsSupported,
+                      onChange: async (v: boolean) => {
+                        if (!browserNotificationsSupported) return;
+                        if (v && browserNotificationPermission !== 'granted') {
+                          const result = await requestPermission();
+                          if (result !== 'granted') return;
+                        }
+                        setFormData({ ...formData, browserNotificationsEnabled: v });
+                      },
+                      disabled: !browserNotificationsSupported || browserNotificationPermission === 'denied',
+                    },
+                    {
+                      id: 'show-badge',
+                      icon: 'trophy',
+                      label: 'Show Personality Badge',
+                      desc: 'Display your personality quiz badge on your profile',
+                      checked: formData.showPersonalityBadge,
+                      onChange: (v: boolean) => setFormData({ ...formData, showPersonalityBadge: v }),
+                      disabled: false,
+                    },
+                  ].map((item) => (
+                    <div key={item.id} className="flex items-center justify-between p-4 rounded-lg" style={{ backgroundColor: 'var(--bg-primary)' }}>
+                      <div className="flex-1">
+                        <Label htmlFor={item.id} className="flex items-center gap-2 cursor-pointer font-medium">
+                          <span className="material-symbols-outlined text-lg">{item.icon}</span>
+                          {item.label}
+                        </Label>
+                        <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>{item.desc}</p>
+                        {item.id === 'browser-notifications' && browserNotificationsSupported && browserNotificationPermission === 'denied' && (
+                          <p className="text-xs mt-2 font-semibold" style={{ color: 'var(--danger)' }}>Permission denied. Please enable in your browser settings.</p>
+                        )}
+                      </div>
+                      <Switch id={item.id} checked={item.checked} onCheckedChange={item.onChange} disabled={item.disabled} />
+                    </div>
+                  ))}
+
+                  <Button onClick={handlePreferencesSave} className="w-full sm:w-auto" style={{ backgroundColor: accentColor }}>
+                    Save Preferences
+                  </Button>
+                </div>
+
+                <Separator />
+
+                {/* Danger Zone */}
+                <div className="space-y-4">
+                  <h3 className="text-base font-semibold" style={{ color: 'var(--danger)' }}>Danger Zone</h3>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    Once you delete your account, there is no going back. All your data, messages, and connections will be permanently deleted.
+                  </p>
+                  <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
+                    Delete My Account
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </>
@@ -867,6 +1113,44 @@ export default function ProfilePage() {
                 Cancel
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Feed Post Detail Dialog */}
+        <Dialog open={!!selectedFeedPost} onOpenChange={(open) => !open && setSelectedFeedPost(null)}>
+          <DialogContent className="max-w-2xl p-0 overflow-hidden">
+            {selectedFeedPost && (
+              <div className="flex flex-col">
+                <div className="bg-black flex items-center justify-center max-h-[60vh]">
+                  {selectedFeedPost.mediaType === 'video' ? (
+                    <video src={selectedFeedPost.mediaUrl} className="max-h-[60vh] w-full object-contain" controls autoPlay />
+                  ) : (
+                    <img src={selectedFeedPost.mediaUrl} alt={selectedFeedPost.caption || 'Post'} className="max-h-[60vh] w-full object-contain" />
+                  )}
+                </div>
+                <div className="p-5">
+                  {selectedFeedPost.caption && (
+                    <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>{selectedFeedPost.caption}</p>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={() => handleFeedLike(selectedFeedPost.id)}
+                      className="flex items-center gap-2 transition hover:brightness-125"
+                      style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}
+                    >
+                      <svg width="22" height="22" viewBox="0 0 24 24"
+                        fill={selectedFeedPost.likes.some(l => l.userId === profile?.id) ? '#f23f42' : 'none'}
+                        stroke={selectedFeedPost.likes.some(l => l.userId === profile?.id) ? '#f23f42' : 'var(--text-tertiary)'}
+                        strokeWidth="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                      </svg>
+                      <span className="text-sm font-semibold" style={{ color: 'var(--text-tertiary)' }}>{selectedFeedPost._count.likes}</span>
+                    </button>
+                    <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{new Date(selectedFeedPost.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
 

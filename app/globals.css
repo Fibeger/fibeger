@@ -270,7 +270,7 @@ button {
   letter-spacing: 0;
   border: none;
   cursor: pointer;
-  border-radius: 4px;
+  /* border-radius: 4px; */
 }
 
 button:hover {
