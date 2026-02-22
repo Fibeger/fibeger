@@ -6,6 +6,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useSidebar } from '../context/SidebarContext';
 import { useRealtimeEvents } from '@/app/hooks/useRealtimeEvents';
+import UserAvatar from './UserAvatar';
+import { Button } from '@/components/ui/button';
 
 interface User {
   id: number;
@@ -431,22 +433,9 @@ export default function Sidebar() {
                       onClick={() => handleStartConversation(friend.id)}
                       disabled={creatingConversation}
                       className="w-full p-1.5 rounded flex items-center gap-2 transition hover:bg-gray-700"
-                      style={{ backgroundColor: 'transparent' }}
+                      style={{ backgroundColor: 'transparent', border: 'none' }}
                     >
-                      {friend.avatar ? (
-                        <img
-                          src={friend.avatar}
-                          alt={friend.username}
-                          className="w-6 h-6 rounded-full"
-                        />
-                      ) : (
-                        <div
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-white font-semibold text-xs"
-                          style={{ backgroundColor: '#5865f2' }}
-                        >
-                          {friend.username.charAt(0).toUpperCase()}
-                        </div>
-                      )}
+                      <UserAvatar src={friend.avatar} username={friend.username} size="xs" />
                       <span className="text-sm truncate" style={{ color: '#f2f3f5' }}>
                         {friend.nickname || friend.username}
                       </span>
@@ -492,20 +481,7 @@ export default function Sidebar() {
                         }
                       }}
                     >
-                      {otherUser?.avatar ? (
-                        <img
-                          src={otherUser.avatar}
-                          alt={otherUser.username}
-                          className="w-8 h-8 rounded-full flex-shrink-0"
-                        />
-                      ) : (
-                        <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0"
-                          style={{ backgroundColor: '#5865f2' }}
-                        >
-                          {(otherUser?.username?.charAt(0) || 'U').toUpperCase()}
-                        </div>
-                      )}
+                      <UserAvatar src={otherUser?.avatar} username={otherUser?.username || 'U'} size="sm" />
                       <span className="text-sm truncate flex-1" style={{ 
                         fontWeight: hasUnread ? 600 : 'normal',
                         color: hasUnread && !isConvActive ? '#f2f3f5' : undefined
@@ -608,20 +584,7 @@ export default function Sidebar() {
                             onChange={() => toggleFriendSelection(friend.id)}
                             className="cursor-pointer"
                           />
-                          {friend.avatar ? (
-                            <img
-                              src={friend.avatar}
-                              alt={friend.username}
-                              className="w-5 h-5 rounded-full"
-                            />
-                          ) : (
-                            <div
-                              className="w-5 h-5 rounded-full flex items-center justify-center text-white font-semibold text-xs"
-                              style={{ backgroundColor: '#5865f2' }}
-                            >
-                              {friend.username.charAt(0).toUpperCase()}
-                            </div>
-                          )}
+                          <UserAvatar src={friend.avatar} username={friend.username} size="xs" />
                           <span className="text-xs truncate" style={{ color: '#f2f3f5' }}>
                             {friend.nickname || friend.username}
                           </span>
@@ -630,14 +593,9 @@ export default function Sidebar() {
                     </div>
                   </div>
                 )}
-                <button
-                  type="submit"
-                  disabled={creatingGroup}
-                  className="w-full py-1.5 rounded text-sm font-semibold hover:brightness-90 transition"
-                  style={{ backgroundColor: '#5865f2', color: '#ffffff' }}
-                >
+                <Button type="submit" disabled={creatingGroup} size="sm" className="w-full">
                   {creatingGroup ? 'Creating...' : 'Create Group'}
-                </button>
+                </Button>
               </form>
             </div>
           )}
@@ -676,20 +634,7 @@ export default function Sidebar() {
                         }
                       }}
                     >
-                      {group.avatar ? (
-                        <img
-                          src={group.avatar}
-                          alt={group.name}
-                          className="w-8 h-8 rounded-full flex-shrink-0"
-                        />
-                      ) : (
-                        <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0"
-                          style={{ backgroundColor: '#5865f2' }}
-                        >
-                          {group.name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
+                      <UserAvatar src={group.avatar} username={group.name} size="sm" />
                       <span className="text-sm truncate flex-1" style={{ 
                         fontWeight: hasUnread ? 600 : 'normal',
                         color: hasUnread && !isGroupActive ? '#f2f3f5' : undefined
@@ -719,20 +664,11 @@ export default function Sidebar() {
         padding: '10px 8px',
       }}>
         <div className="flex items-center gap-2 px-2">
-          {(session.user as any)?.avatar ? (
-            <img 
-              src={(session.user as any).avatar}
-              alt="Your avatar"
-              className="w-8 h-8 rounded-full flex-shrink-0 object-cover"
-            />
-          ) : (
-            <div 
-              className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0"
-              style={{ backgroundColor: '#5865f2', color: '#ffffff' }}
-            >
-              {((session.user as any)?.username?.[0] || session.user?.email?.[0] || 'U').toUpperCase()}
-            </div>
-          )}
+          <UserAvatar
+            src={(session.user as any)?.avatar}
+            username={(session.user as any)?.username || session.user?.email || 'U'}
+            size="sm"
+          />
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold truncate" style={{ color: '#f2f3f5' }}>
               {(session.user as any)?.username || session.user?.email}

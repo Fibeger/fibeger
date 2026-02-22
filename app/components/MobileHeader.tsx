@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useSidebar } from '../context/SidebarContext';
 import NotificationBell from './NotificationBell';
+import { Button } from '@/components/ui/button';
 
 export default function MobileHeader() {
   const { data: session } = useSession();
@@ -17,19 +18,12 @@ export default function MobileHeader() {
     <header className="lg:hidden fixed top-0 left-0 right-0 z-40 shadow-lg" style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
       <div className="flex items-center justify-between px-4 h-14">
         {/* Hamburger Menu */}
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={toggleSidebar}
-          className="p-2 rounded-lg transition-all"
-          style={{ color: 'var(--text-secondary)' }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = 'var(--text-primary)';
-            e.currentTarget.style.backgroundColor = 'var(--hover-bg)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = 'var(--text-secondary)';
-            e.currentTarget.style.backgroundColor = 'transparent';
-          }}
           aria-label="Toggle menu"
+          style={{ color: 'var(--text-secondary)' }}
         >
           <svg
             className="w-6 h-6"
@@ -42,7 +36,7 @@ export default function MobileHeader() {
           >
             <path d="M4 6h16M4 12h16M4 18h16"></path>
           </svg>
-        </button>
+        </Button>
 
         {/* Logo */}
         <Link 

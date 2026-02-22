@@ -3,6 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -17,10 +22,7 @@ export default function SignupPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,9 +33,7 @@ export default function SignupPage() {
     try {
       const response = await fetch("/api/auth/signup", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
@@ -44,7 +44,6 @@ export default function SignupPage() {
         return;
       }
 
-      // Redirect to login page
       router.push("/auth/login");
     } catch (err) {
       setError("An error occurred. Please try again.");
@@ -57,164 +56,103 @@ export default function SignupPage() {
   return (
     <div className="flex min-h-screen items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-md">
-        <div 
-          className="rounded-lg p-6 sm:p-10 border"
-          style={{
-            backgroundColor: 'var(--bg-secondary)',
-            borderColor: 'var(--border-color)',
-          }}
-        >
-          <h1 className="mb-2 text-center text-3xl font-bold">
-            Fibeger
-          </h1>
-          <h2 className="mb-6 text-center text-lg font-semibold" style={{ color: 'var(--text-secondary)' }}>
-            Create Account
-          </h2>
+        <Card>
+          <CardHeader className="text-center pb-2">
+            <h1 className="text-3xl font-bold" style={{ color: "var(--text-primary)" }}>
+              Fibeger
+            </h1>
+            <p className="text-lg font-semibold" style={{ color: "var(--text-secondary)" }}>
+              Create Account
+            </p>
+          </CardHeader>
 
-          {error && (
-            <div 
-              className="mb-6 rounded-lg p-4 text-sm border"
-              style={{
-                backgroundColor: 'var(--bg-tertiary)',
-                borderColor: 'var(--border-color)',
-                color: 'var(--text-secondary)',
-              }}
-              role="alert"
-              aria-live="polite"
-            >
-              <strong>Error:</strong> {error}
-            </div>
-          )}
+          <CardContent className="space-y-6">
+            {error && (
+              <Alert variant="destructive" role="alert" aria-live="polite">
+                <AlertDescription>
+                  <strong>Error:</strong> {error}
+                </AlertDescription>
+              </Alert>
+            )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label
-                htmlFor="username"
-                className="block text-sm font-medium mb-3"
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  placeholder="Choose a username"
+                  disabled={loading}
+                  required
+                  aria-required="true"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Enter your email"
+                  disabled={loading}
+                  required
+                  aria-required="true"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Enter your password"
+                  disabled={loading}
+                  required
+                  aria-required="true"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Confirm your password"
+                  disabled={loading}
+                  required
+                  aria-required="true"
+                />
+              </div>
+
+              <Button type="submit" disabled={loading} className="w-full">
+                {loading ? "Creating account..." : "Sign Up"}
+              </Button>
+            </form>
+
+            <p className="text-center text-sm" style={{ color: "var(--text-secondary)" }}>
+              Already have an account?{" "}
+              <Link
+                href="/auth/login"
+                className="font-semibold hover:opacity-80 transition-all"
+                style={{ color: "var(--text-primary)" }}
               >
-                Username
-              </label>
-              <input
-                id="username"
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                className="w-full rounded-md px-5 py-3 border transition-all"
-                style={{
-                  backgroundColor: 'var(--bg-tertiary)',
-                  borderColor: 'var(--border-color)',
-                  color: 'var(--text-primary)',
-                }}
-                placeholder="Choose a username"
-                disabled={loading}
-                required
-                aria-required="true"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium mb-3"
-              >
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full rounded-md px-5 py-3 border transition-all"
-                style={{
-                  backgroundColor: 'var(--bg-tertiary)',
-                  borderColor: 'var(--border-color)',
-                  color: 'var(--text-primary)',
-                }}
-                placeholder="Enter your email"
-                disabled={loading}
-                required
-                aria-required="true"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium mb-3"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full rounded-md px-5 py-3 border transition-all"
-                style={{
-                  backgroundColor: 'var(--bg-tertiary)',
-                  borderColor: 'var(--border-color)',
-                  color: 'var(--text-primary)',
-                }}
-                placeholder="Enter your password"
-                disabled={loading}
-                required
-                aria-required="true"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium mb-3"
-              >
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className="w-full rounded-md px-5 py-3 border transition-all"
-                style={{
-                  backgroundColor: 'var(--bg-tertiary)',
-                  borderColor: 'var(--border-color)',
-                  color: 'var(--text-primary)',
-                }}
-                placeholder="Confirm your password"
-                disabled={loading}
-                required
-                aria-required="true"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-md py-3 text-white font-medium transition-all focus:outline-2 focus:outline-offset-2"
-              style={{
-                backgroundColor: 'var(--accent)',
-                outlineColor: 'var(--accent)',
-              }}
-            >
-              {loading ? "Creating account..." : "Sign Up"}
-            </button>
-          </form>
-
-          <p className="mt-6 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Already have an account?{" "}
-            <Link
-              href="/auth/login"
-              className="font-semibold hover:opacity-80 transition-all"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              Sign in
-            </Link>
-          </p>
-        </div>
+                Sign in
+              </Link>
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

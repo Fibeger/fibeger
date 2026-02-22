@@ -5,10 +5,35 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import PersonalityTestModal from '../components/PersonalityTestModal';
 import FlagEmoji from '../components/FlagEmoji';
+import PageLoader from '../components/PageLoader';
+import UserAvatar from '../components/UserAvatar';
 import personalityTestData from '../lib/personalityTest.json';
 import { useBrowserNotifications } from '../hooks/useBrowserNotifications';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGithub, faInstagram, faLinkedin, faSteam, faXTwitter } from '@fortawesome/free-brands-svg-icons';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface UserProfile {
   id: number;
@@ -43,13 +68,56 @@ interface SocialLinks {
   steam?: string;
 }
 
-interface Badge {
+interface BadgeType {
   id: string;
   name: string;
   emoji: string;
   description: string;
   color: string;
 }
+
+const countries = [
+  { code: 'US', name: 'United States' },
+  { code: 'GB', name: 'United Kingdom' },
+  { code: 'CA', name: 'Canada' },
+  { code: 'AU', name: 'Australia' },
+  { code: 'DE', name: 'Germany' },
+  { code: 'FR', name: 'France' },
+  { code: 'ES', name: 'Spain' },
+  { code: 'IT', name: 'Italy' },
+  { code: 'NL', name: 'Netherlands' },
+  { code: 'SE', name: 'Sweden' },
+  { code: 'NO', name: 'Norway' },
+  { code: 'DK', name: 'Denmark' },
+  { code: 'FI', name: 'Finland' },
+  { code: 'PL', name: 'Poland' },
+  { code: 'BR', name: 'Brazil' },
+  { code: 'MX', name: 'Mexico' },
+  { code: 'AR', name: 'Argentina' },
+  { code: 'JP', name: 'Japan' },
+  { code: 'KR', name: 'South Korea' },
+  { code: 'CN', name: 'China' },
+  { code: 'IN', name: 'India' },
+  { code: 'RU', name: 'Russia' },
+  { code: 'ZA', name: 'South Africa' },
+  { code: 'NZ', name: 'New Zealand' },
+  { code: 'IE', name: 'Ireland' },
+  { code: 'CH', name: 'Switzerland' },
+  { code: 'AT', name: 'Austria' },
+  { code: 'BE', name: 'Belgium' },
+  { code: 'PT', name: 'Portugal' },
+  { code: 'GR', name: 'Greece' },
+  { code: 'TR', name: 'Turkey' },
+  { code: 'SG', name: 'Singapore' },
+  { code: 'MY', name: 'Malaysia' },
+  { code: 'TH', name: 'Thailand' },
+  { code: 'VN', name: 'Vietnam' },
+  { code: 'PH', name: 'Philippines' },
+  { code: 'ID', name: 'Indonesia' },
+  { code: 'AE', name: 'United Arab Emirates' },
+  { code: 'SA', name: 'Saudi Arabia' },
+  { code: 'EG', name: 'Egypt' },
+];
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
@@ -59,6 +127,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState<'success' | 'error' | 'info'>('info');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
@@ -88,16 +157,18 @@ export default function ProfilePage() {
   });
   const [newInterest, setNewInterest] = useState('');
 
+  const showMessage = (msg: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setMessage(msg);
+    setMessageType(type);
+    setTimeout(() => setMessage(''), 4000);
+  };
+
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (status === 'unauthenticated') {
       router.push('/auth/login');
       return;
     }
-
-    if (status === "loading" || !session) {
-      return;
-    }
-
+    if (status === 'loading' || !session) return;
     fetchProfile();
   }, [status, session, router]);
 
@@ -107,21 +178,17 @@ export default function ProfilePage() {
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
-        
+
         let socialLinks: SocialLinks = {};
         if (data.socialLinks) {
-          try {
-            socialLinks = JSON.parse(data.socialLinks);
-          } catch {}
+          try { socialLinks = JSON.parse(data.socialLinks); } catch {}
         }
-        
+
         let interests: string[] = [];
         if (data.interests) {
-          try {
-            interests = JSON.parse(data.interests);
-          } catch {}
+          try { interests = JSON.parse(data.interests); } catch {}
         }
-        
+
         setFormData({
           nickname: data.nickname || '',
           bio: data.bio || '',
@@ -137,15 +204,15 @@ export default function ProfilePage() {
           github: socialLinks.github || '',
           instagram: socialLinks.instagram || '',
           linkedin: socialLinks.linkedin || '',
-          interests: interests,
+          interests,
           showPersonalityBadge: data.showPersonalityBadge ?? true,
           notificationSoundsEnabled: data.notificationSoundsEnabled ?? true,
           browserNotificationsEnabled: data.browserNotificationsEnabled ?? false,
           steamUsername: data.steamUsername || '',
         });
       }
-    } catch (error) {
-      setMessage('Failed to load profile');
+    } catch {
+      showMessage('Failed to load profile', 'error');
     } finally {
       setLoading(false);
     }
@@ -160,7 +227,7 @@ export default function ProfilePage() {
         instagram: formData.instagram || undefined,
         linkedin: formData.linkedin || undefined,
       };
-      
+
       const res = await fetch('/api/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -186,14 +253,13 @@ export default function ProfilePage() {
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
-        setMessage('✓ Profile updated successfully');
+        showMessage('Profile updated successfully', 'success');
         setEditing(false);
-        setTimeout(() => setMessage(''), 3000);
       } else {
-        setMessage('Failed to update profile');
+        showMessage('Failed to update profile', 'error');
       }
-    } catch (error) {
-      setMessage('Error updating profile');
+    } catch {
+      showMessage('Error updating profile', 'error');
     }
   };
 
@@ -201,37 +267,24 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setMessage('File size must be less than 5MB');
-      return;
-    }
-
-    if (!file.type.startsWith('image/')) {
-      setMessage('Please upload an image file');
-      return;
-    }
+    if (file.size > 5 * 1024 * 1024) { showMessage('File size must be less than 5MB', 'error'); return; }
+    if (!file.type.startsWith('image/')) { showMessage('Please upload an image file', 'error'); return; }
 
     setUploadingAvatar(true);
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('avatar', file);
-
-      const res = await fetch('/api/profile/avatar', {
-        method: 'POST',
-        body: formDataToSend,
-      });
-
+      const fd = new FormData();
+      fd.append('avatar', file);
+      const res = await fetch('/api/profile/avatar', { method: 'POST', body: fd });
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
-        setMessage('✓ Profile picture updated successfully');
-        setTimeout(() => setMessage(''), 3000);
+        showMessage('Profile picture updated successfully', 'success');
       } else {
         const error = await res.json();
-        setMessage(error.error || 'Failed to upload image');
+        showMessage(error.error || 'Failed to upload image', 'error');
       }
-    } catch (error) {
-      setMessage('Error uploading image');
+    } catch {
+      showMessage('Error uploading image', 'error');
     } finally {
       setUploadingAvatar(false);
     }
@@ -241,37 +294,24 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      setMessage('Banner size must be less than 10MB');
-      return;
-    }
-
-    if (!file.type.startsWith('image/')) {
-      setMessage('Please upload an image file');
-      return;
-    }
+    if (file.size > 10 * 1024 * 1024) { showMessage('Banner size must be less than 10MB', 'error'); return; }
+    if (!file.type.startsWith('image/')) { showMessage('Please upload an image file', 'error'); return; }
 
     setUploadingAvatar(true);
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('banner', file);
-
-      const res = await fetch('/api/profile/banner', {
-        method: 'POST',
-        body: formDataToSend,
-      });
-
+      const fd = new FormData();
+      fd.append('banner', file);
+      const res = await fetch('/api/profile/banner', { method: 'POST', body: fd });
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
-        setMessage('✓ Banner updated successfully');
-        setTimeout(() => setMessage(''), 3000);
+        showMessage('Banner updated successfully', 'success');
       } else {
         const error = await res.json();
-        setMessage(error.error || 'Failed to upload banner');
+        showMessage(error.error || 'Failed to upload banner', 'error');
       }
-    } catch (error) {
-      setMessage('Error uploading banner');
+    } catch {
+      showMessage('Error uploading banner', 'error');
     } finally {
       setUploadingAvatar(false);
     }
@@ -279,31 +319,23 @@ export default function ProfilePage() {
 
   const handleBannerRemove = async () => {
     if (!confirm('Are you sure you want to remove your banner?')) return;
-
     try {
-      const res = await fetch('/api/profile/banner', {
-        method: 'DELETE',
-      });
-
+      const res = await fetch('/api/profile/banner', { method: 'DELETE' });
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
-        setMessage('✓ Banner removed successfully');
-        setTimeout(() => setMessage(''), 3000);
+        showMessage('Banner removed successfully', 'success');
       } else {
-        setMessage('Failed to remove banner');
+        showMessage('Failed to remove banner', 'error');
       }
-    } catch (error) {
-      setMessage('Error removing banner');
+    } catch {
+      showMessage('Error removing banner', 'error');
     }
   };
 
   const handleUsernameChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.newUsername.trim()) {
-      setMessage('New username is required');
-      return;
-    }
+    if (!formData.newUsername.trim()) { showMessage('New username is required', 'error'); return; }
 
     try {
       const res = await fetch('/api/profile/username', {
@@ -316,40 +348,35 @@ export default function ProfilePage() {
         const data = await res.json();
         setProfile(data.user);
         setFormData({ ...formData, newUsername: '' });
-        setMessage('✓ Username changed successfully');
-        setTimeout(() => setMessage(''), 3000);
+        showMessage('Username changed successfully', 'success');
       } else {
         const error = await res.json();
-        setMessage(error.error || 'Failed to change username');
+        showMessage(error.error || 'Failed to change username', 'error');
       }
-    } catch (error) {
-      setMessage('Error changing username');
+    } catch {
+      showMessage('Error changing username', 'error');
     }
   };
 
   const handleDeleteAccount = async () => {
     if (deleteConfirmText !== profile?.username) {
-      setMessage('Username does not match. Please try again.');
+      showMessage('Username does not match. Please try again.', 'error');
       return;
     }
 
     setDeleting(true);
     try {
-      const res = await fetch('/api/profile/delete', {
-        method: 'DELETE',
-      });
-
+      const res = await fetch('/api/profile/delete', { method: 'DELETE' });
       if (res.ok) {
-        // Sign out the user and redirect to login
         await signOut({ redirect: false });
         router.push('/auth/login');
       } else {
         const error = await res.json();
-        setMessage(error.error || 'Failed to delete account');
+        showMessage(error.error || 'Failed to delete account', 'error');
         setDeleting(false);
       }
-    } catch (error) {
-      setMessage('Error deleting account');
+    } catch {
+      showMessage('Error deleting account', 'error');
       setDeleting(false);
     }
   };
@@ -362,13 +389,12 @@ export default function ProfilePage() {
   };
 
   const removeInterest = (interest: string) => {
-    setFormData({ ...formData, interests: formData.interests.filter(i => i !== interest) });
+    setFormData({ ...formData, interests: formData.interests.filter((i) => i !== interest) });
   };
 
-  const handlePersonalityTestComplete = (badge: Badge) => {
+  const handlePersonalityTestComplete = (badge: BadgeType) => {
     setProfile((prev) => prev ? { ...prev, personalityBadge: badge.id } : null);
-    setMessage(`✓ You are ${badge.name}! Badge saved to your profile.`);
-    setTimeout(() => setMessage(''), 5000);
+    showMessage(`You are ${badge.name}! Badge saved to your profile.`, 'success');
   };
 
   const getUserBadge = () => {
@@ -376,226 +402,102 @@ export default function ProfilePage() {
     return personalityTestData.badges.find((b) => b.id === profile.personalityBadge);
   };
 
-
-  const countries = [
-    { code: 'US', name: 'United States' },
-    { code: 'GB', name: 'United Kingdom' },
-    { code: 'CA', name: 'Canada' },
-    { code: 'AU', name: 'Australia' },
-    { code: 'DE', name: 'Germany' },
-    { code: 'FR', name: 'France' },
-    { code: 'ES', name: 'Spain' },
-    { code: 'IT', name: 'Italy' },
-    { code: 'NL', name: 'Netherlands' },
-    { code: 'SE', name: 'Sweden' },
-    { code: 'NO', name: 'Norway' },
-    { code: 'DK', name: 'Denmark' },
-    { code: 'FI', name: 'Finland' },
-    { code: 'PL', name: 'Poland' },
-    { code: 'BR', name: 'Brazil' },
-    { code: 'MX', name: 'Mexico' },
-    { code: 'AR', name: 'Argentina' },
-    { code: 'JP', name: 'Japan' },
-    { code: 'KR', name: 'South Korea' },
-    { code: 'CN', name: 'China' },
-    { code: 'IN', name: 'India' },
-    { code: 'RU', name: 'Russia' },
-    { code: 'ZA', name: 'South Africa' },
-    { code: 'NZ', name: 'New Zealand' },
-    { code: 'IE', name: 'Ireland' },
-    { code: 'CH', name: 'Switzerland' },
-    { code: 'AT', name: 'Austria' },
-    { code: 'BE', name: 'Belgium' },
-    { code: 'PT', name: 'Portugal' },
-    { code: 'GR', name: 'Greece' },
-    { code: 'TR', name: 'Turkey' },
-    { code: 'SG', name: 'Singapore' },
-    { code: 'MY', name: 'Malaysia' },
-    { code: 'TH', name: 'Thailand' },
-    { code: 'VN', name: 'Vietnam' },
-    { code: 'PH', name: 'Philippines' },
-    { code: 'ID', name: 'Indonesia' },
-    { code: 'AE', name: 'United Arab Emirates' },
-    { code: 'SA', name: 'Saudi Arabia' },
-    { code: 'EG', name: 'Egypt' },
-  ];
-
-  if (status === "loading" || loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4" style={{ borderColor: 'var(--accent)', borderTopColor: 'var(--text-primary)' }}></div>
-        <p className="mt-6 text-xl font-semibold" style={{ color: 'var(--text-secondary)' }}>Loading profile...</p>
-      </div>
-    </div>
-  );
+  if (status === 'loading' || loading) return <PageLoader message="Loading profile..." />;
 
   const canChangeUsername =
     !profile?.lastUsernameChange ||
-    new Date(profile.lastUsernameChange).getTime() + 7 * 24 * 60 * 60 * 1000 <
-      Date.now();
+    new Date(profile.lastUsernameChange).getTime() + 7 * 24 * 60 * 60 * 1000 < Date.now();
+
+  const accentColor = profile?.themeColor || 'var(--accent)';
 
   return (
-    <div className="min-h-screen py-12 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen py-12 px-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <div className="max-w-4xl mx-auto space-y-6">
         {message && (
-          <div 
-            className={`mb-8 p-5 rounded-lg font-semibold transition-all`}
-            style={{
-              backgroundColor: message.includes('✓') ? 'var(--success)' : message.includes('Failed') || message.includes('Error') ? 'var(--danger)' : 'var(--accent)',
-              color: '#ffffff',
-            }}
-          >
-            {message}
-          </div>
+          <Alert variant={messageType === 'error' ? 'destructive' : 'default'}>
+            <AlertDescription className="font-semibold">{message}</AlertDescription>
+          </Alert>
         )}
 
         {profile && (
-          <div className="space-y-6">
-            {/* Profile Header */}
-            <div 
-              className="rounded-lg overflow-hidden"
-              style={{
-                backgroundColor: 'var(--bg-secondary)',
-              }}
-            >
-              {/* Banner Image */}
-              <div className="relative w-full h-48 sm:h-64" style={{ backgroundColor: profile.banner ? 'transparent' : 'var(--bg-primary)' }}>
+          <>
+            {/* Profile Header Card */}
+            <Card className="overflow-hidden">
+              {/* Banner */}
+              <div className="relative w-full h-48 sm:h-64" style={{ backgroundColor: 'var(--bg-primary)' }}>
                 {profile.banner ? (
                   <>
-                    <img 
-                      src={profile.banner}
-                      alt="Profile banner"
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={profile.banner} alt="Profile banner" className="w-full h-full object-cover" />
                     <div className="absolute top-4 right-4 flex gap-2">
-                      <label className="px-4 py-2 text-white rounded-md cursor-pointer transition font-medium" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleBannerUpload}
-                          disabled={uploadingAvatar}
-                          className="hidden"
-                        />
+                      <label className="px-4 py-2 text-white rounded-md cursor-pointer transition font-medium text-sm" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+                        <input type="file" accept="image/*" onChange={handleBannerUpload} disabled={uploadingAvatar} className="hidden" />
                         Change Banner
                       </label>
-                      <button
-                        onClick={handleBannerRemove}
-                        className="px-4 py-2 text-white rounded-md transition font-medium"
-                        style={{ backgroundColor: 'rgba(220,38,38,0.8)' }}
-                      >
+                      <button onClick={handleBannerRemove} className="px-4 py-2 text-white rounded-md transition font-medium text-sm" style={{ backgroundColor: 'rgba(220,38,38,0.8)' }}>
                         Remove
                       </button>
                     </div>
                   </>
                 ) : (
                   <label className="w-full h-full flex items-center justify-center cursor-pointer hover:opacity-80 transition">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleBannerUpload}
-                      disabled={uploadingAvatar}
-                      className="hidden"
-                    />
+                    <input type="file" accept="image/*" onChange={handleBannerUpload} disabled={uploadingAvatar} className="hidden" />
                     <div className="text-center">
                       <div className="text-4xl mb-2"><span className="material-symbols-outlined">panorama</span></div>
-                      <p className="font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        Click to add a banner
-                      </p>
+                      <p className="font-medium" style={{ color: 'var(--text-secondary)' }}>Click to add a banner</p>
                     </div>
                   </label>
                 )}
               </div>
-              
-              <div className="p-10">
+
+              <CardContent className="p-8 sm:p-10">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8">
-                  {/* Avatar Section */}
+                  {/* Avatar */}
                   <div className="flex-shrink-0" style={{ marginTop: profile.banner ? '-5rem' : '0' }}>
                     <div className="relative group">
-                      {profile.avatar ? (
-                        <img
-                          src={profile.avatar}
-                          alt={profile.username}
-                          className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4"
-                          style={{ borderColor: profile.themeColor || 'var(--accent)', backgroundColor: 'var(--bg-secondary)' }}
-                        />
-                      ) : (
-                        <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full flex items-center justify-center text-white text-5xl font-bold border-4" style={{ backgroundColor: profile.themeColor || 'var(--accent)', borderColor: 'var(--bg-secondary)' }}>
-                          {profile.username.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      <label className="absolute bottom-0 right-0 text-white p-3 rounded-full cursor-pointer transition" style={{ backgroundColor: profile.themeColor || 'var(--accent)' }}>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleAvatarUpload}
-                          disabled={uploadingAvatar}
-                          className="hidden"
-                        />
-                        <span className="material-symbols-outlined p-1">photo_camera_front</span>
+                      <UserAvatar
+                        src={profile.avatar}
+                        username={profile.username}
+                        size="2xl"
+                        className="border-4"
+                        themeColor={profile.themeColor}
+                        style={{ borderColor: accentColor }}
+                      />
+                      <label className="absolute bottom-0 right-0 text-white p-3 rounded-full cursor-pointer transition" style={{ backgroundColor: accentColor }}>
+                        <input type="file" accept="image/*" onChange={handleAvatarUpload} disabled={uploadingAvatar} className="hidden" />
+                        <span className="material-symbols-outlined">photo_camera_front</span>
                       </label>
                     </div>
                   </div>
 
-                  {/* User Info */}
+                  {/* Info */}
                   <div className="flex-1">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <h1 className="text-3xl sm:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                        {profile.nickname || profile.username}
-                      </h1>
+                      <h1 className="text-3xl sm:text-4xl font-bold">{profile.nickname || profile.username}</h1>
                       {profile.country && (
-                        <FlagEmoji 
-                          countryCode={profile.country}
-                          className="text-3xl"
-                          title={countries.find(c => c.code === profile.country)?.name}
-                        />
+                        <FlagEmoji countryCode={profile.country} className="text-3xl" title={countries.find(c => c.code === profile.country)?.name} />
                       )}
                     </div>
-                    
                     <div className="flex items-center gap-3 mt-1 flex-wrap">
-                      <p className="text-lg font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        @{profile.username}
-                      </p>
+                      <p className="text-lg font-medium" style={{ color: 'var(--text-secondary)' }}>@{profile.username}</p>
                       {profile.pronouns && (
-                        <span className="px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-secondary)' }}>
-                          {profile.pronouns}
-                        </span>
+                        <Badge variant="secondary">{profile.pronouns}</Badge>
                       )}
                     </div>
-                    
                     {profile.status && (
-                      <p className="mt-2 text-base font-medium italic" style={{ color: profile.themeColor || 'var(--accent)' }}>
-                        "{profile.status}"
-                      </p>
+                      <p className="mt-2 text-base font-medium italic" style={{ color: accentColor }}>"{profile.status}"</p>
                     )}
-                    
-                    <p className="mt-3 text-base" style={{ color: 'var(--text-secondary)' }}>
-                      {profile.bio || 'No bio yet'}
-                    </p>
-                    
-                    {/* Location and Birthday */}
+                    <p className="mt-3 text-base" style={{ color: 'var(--text-secondary)' }}>{profile.bio || 'No bio yet'}</p>
+
                     <div className="flex items-center gap-4 mt-4 flex-wrap text-sm font-medium" style={{ color: 'var(--text-tertiary)' }}>
                       {profile.city && (
-                        <div className="flex items-center gap-1">
-                          <span className="material-symbols-outlined" aria-hidden="true">location_on</span>
-                          <span>{profile.city}</span>
-                        </div>
+                        <div className="flex items-center gap-1"><span className="material-symbols-outlined">location_on</span><span>{profile.city}</span></div>
                       )}
                       {profile.birthday && (
-                        <div className="flex items-center gap-1">
-                          <span className="material-symbols-outlined" aria-hidden="true">cake</span>
-                          <span>{profile.birthday}</span>
-                        </div>
+                        <div className="flex items-center gap-1"><span className="material-symbols-outlined">cake</span><span>{profile.birthday}</span></div>
                       )}
                       {profile.website && (
-                        <a 
-                          href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 hover:underline"
-                          style={{ color: profile.themeColor || 'var(--accent)' }}
-                        >
-                          <span className="material-symbols-outlined" aria-hidden="true">link_2</span>
-                          <span>{profile.website}</span>
+                        <a href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline" style={{ color: accentColor }}>
+                          <span className="material-symbols-outlined">link_2</span><span>{profile.website}</span>
                         </a>
                       )}
                     </div>
@@ -608,31 +510,11 @@ export default function ProfilePage() {
                         if (hasLinks) {
                           return (
                             <div className="flex items-center gap-4 mt-4">
-                              {links.twitter && (
-                                <a href={`https://twitter.com/${links.twitter}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="Twitter/X">
-                                  <FontAwesomeIcon icon={faXTwitter} inverse/>
-                                </a>
-                              )}
-                              {links.github && (
-                                <a href={`https://github.com/${links.github}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="GitHub">
-                                  <FontAwesomeIcon icon={faGithub} inverse/>
-                                </a>
-                              )}
-                              {links.instagram && (
-                                <a href={`https://instagram.com/${links.instagram}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="Instagram">
-                                  <FontAwesomeIcon icon={faInstagram} inverse/>
-                                </a>
-                              )}
-                              {links.linkedin && (
-                                <a href={`https://linkedin.com/in/${links.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="LinkedIn">
-                                  <FontAwesomeIcon icon={faLinkedin} inverse/>
-                                </a>
-                              )}
-                              {profile.steamUsername && (
-                                <a href={`https://steamcommunity.com/id/${profile.steamUsername}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition" title="Steam">
-                                  <FontAwesomeIcon icon={faSteam} inverse/>
-                                </a>
-                              )}
+                              {links.twitter && <a href={`https://twitter.com/${links.twitter}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition"><FontAwesomeIcon icon={faXTwitter} inverse /></a>}
+                              {links.github && <a href={`https://github.com/${links.github}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition"><FontAwesomeIcon icon={faGithub} inverse /></a>}
+                              {links.instagram && <a href={`https://instagram.com/${links.instagram}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition"><FontAwesomeIcon icon={faInstagram} inverse /></a>}
+                              {links.linkedin && <a href={`https://linkedin.com/in/${links.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition"><FontAwesomeIcon icon={faLinkedin} inverse /></a>}
+                              {profile.steamUsername && <a href={`https://steamcommunity.com/id/${profile.steamUsername}`} target="_blank" rel="noopener noreferrer" className="text-2xl hover:opacity-70 transition"><FontAwesomeIcon icon={faSteam} inverse /></a>}
                             </div>
                           );
                         }
@@ -648,13 +530,7 @@ export default function ProfilePage() {
                           return (
                             <div className="flex flex-wrap gap-2 mt-4">
                               {interests.map((interest, idx) => (
-                                <span 
-                                  key={idx}
-                                  className="px-3 py-1 rounded-full text-sm font-medium"
-                                  style={{ backgroundColor: profile.themeColor || 'var(--accent)', color: '#fff' }}
-                                >
-                                  {interest}
-                                </span>
+                                <Badge key={idx} style={{ backgroundColor: accentColor, color: '#fff' }}>{interest}</Badge>
                               ))}
                             </div>
                           );
@@ -668,21 +544,11 @@ export default function ProfilePage() {
                       const badge = getUserBadge();
                       if (badge && profile.showPersonalityBadge) {
                         return (
-                          <div 
-                            className="mt-4 px-4 py-3 rounded-lg inline-flex items-center gap-3"
-                            style={{ 
-                              backgroundColor: `${badge.color}20`,
-                              border: `2px solid ${badge.color}`
-                            }}
-                          >
+                          <div className="mt-4 px-4 py-3 rounded-lg inline-flex items-center gap-3" style={{ backgroundColor: `${badge.color}20`, border: `2px solid ${badge.color}` }}>
                             <span className="text-3xl">{badge.emoji}</span>
                             <div>
-                              <p className="font-bold text-sm" style={{ color: badge.color }}>
-                                {badge.name}
-                              </p>
-                              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                                {badge.description}
-                              </p>
+                              <p className="font-bold text-sm" style={{ color: badge.color }}>{badge.name}</p>
+                              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{badge.description}</p>
                             </div>
                           </div>
                         );
@@ -693,619 +559,316 @@ export default function ProfilePage() {
 
                   <div className="w-full sm:w-auto flex flex-col gap-3">
                     {editing ? (
-                      <button
-                        onClick={() => setEditing(false)}
-                        className="w-full px-8 py-3 text-white rounded-md transition font-medium"
-                        style={{ backgroundColor: 'var(--danger)' }}
-                      >
-                        Cancel
-                      </button>
+                      <Button variant="destructive" onClick={() => setEditing(false)}>Cancel</Button>
                     ) : (
                       <>
-                        <button
-                          onClick={() => setEditing(true)}
-                          className="w-full px-8 py-3 text-white rounded-md transition font-medium"
-                          style={{ backgroundColor: profile.themeColor || 'var(--accent)' }}
-                        >
+                        <Button onClick={() => setEditing(true)} style={{ backgroundColor: accentColor }}>
                           Edit Profile
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           onClick={() => setShowPersonalityTest(true)}
-                          className="w-full px-8 py-3 text-white rounded-md transition font-medium"
-                          style={{ backgroundColor: profile.personalityBadge ? 'var(--text-tertiary)' : profile.themeColor || 'var(--accent)' }}
+                          style={{ backgroundColor: profile.personalityBadge ? 'var(--text-tertiary)' : accentColor }}
                         >
-                          <div className="flex items-center">
-                          <span className="material-symbols-outlined">{profile.personalityBadge ? 'refresh' : 'local_fire_department'}</span>
-                          <div className="ml-2">{profile.personalityBadge ? 'Retake Test' : 'Take PEAS Test'}</div>
-
-                          </div>
-                        </button>
+                          <span className="material-symbols-outlined mr-2">{profile.personalityBadge ? 'refresh' : 'local_fire_department'}</span>
+                          {profile.personalityBadge ? 'Retake Test' : 'Take PEAS Test'}
+                        </Button>
                       </>
                     )}
                   </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
             {/* Edit Profile Form */}
             {editing && (
-              <div className="rounded-lg p-10" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-                <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Edit Profile</h2>
-                <form onSubmit={handleUpdate} className="space-y-8">
-                  
-                  {/* Basic Information */}
-                  <div className="space-y-5">
-                    <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Basic Information</h3>
-                    
-                    <div>
-                      <div className="flex justify-between items-center mb-3">
-                        <label className="block text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                          Display Name
-                        </label>
-                        <span className="text-xs font-medium" style={{ color: formData.nickname.length > 25 ? 'var(--danger)' : 'var(--text-tertiary)' }}>
-                          {formData.nickname.length}/25
-                        </span>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Edit Profile</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleUpdate} className="space-y-8">
+                    {/* Basic Information */}
+                    <div className="space-y-5">
+                      <h3 className="text-lg font-semibold">Basic Information</h3>
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <Label>Display Name</Label>
+                          <span className="text-xs" style={{ color: formData.nickname.length > 25 ? 'var(--danger)' : 'var(--text-tertiary)' }}>{formData.nickname.length}/25</span>
+                        </div>
+                        <Input value={formData.nickname} onChange={(e) => setFormData({ ...formData, nickname: e.target.value })} placeholder="Your display name" maxLength={25} />
                       </div>
-                      <input
-                        type="text"
-                        value={formData.nickname}
-                        onChange={(e) =>
-                          setFormData({ ...formData, nickname: e.target.value })
-                        }
-                        placeholder="Your display name"
-                        maxLength={25}
-                        className="w-full px-5 py-3 rounded-md"
-                      />
-                    </div>
 
-                    <div>
-                      <div className="flex justify-between items-center mb-3">
-                        <label className="block text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                          Bio
-                        </label>
-                        <span className="text-xs font-medium" style={{ color: formData.bio.length > 355 ? 'var(--danger)' : 'var(--text-tertiary)' }}>
-                          {formData.bio.length}/355
-                        </span>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <Label>Bio</Label>
+                          <span className="text-xs" style={{ color: formData.bio.length > 355 ? 'var(--danger)' : 'var(--text-tertiary)' }}>{formData.bio.length}/355</span>
+                        </div>
+                        <Textarea value={formData.bio} onChange={(e) => setFormData({ ...formData, bio: e.target.value })} placeholder="Tell us about yourself..." maxLength={355} rows={4} />
                       </div>
-                      <textarea
-                        value={formData.bio}
-                        onChange={(e) =>
-                          setFormData({ ...formData, bio: e.target.value })
-                        }
-                        placeholder="Tell us about yourself..."
-                        maxLength={355}
-                        className="w-full px-5 py-3 rounded-md"
-                        rows={4}
-                      />
-                    </div>
 
-                    <div>
-                      <div className="flex justify-between items-center mb-3">
-                        <label className="block text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                          Status Message
-                        </label>
-                        <span className="text-xs font-medium" style={{ color: formData.status.length > 100 ? 'var(--danger)' : 'var(--text-tertiary)' }}>
-                          {formData.status.length}/100
-                        </span>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <Label>Status Message</Label>
+                          <span className="text-xs" style={{ color: formData.status.length > 100 ? 'var(--danger)' : 'var(--text-tertiary)' }}>{formData.status.length}/100</span>
+                        </div>
+                        <Input value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} placeholder="What's on your mind?" maxLength={100} />
                       </div>
-                      <input
-                        type="text"
-                        value={formData.status}
-                        onChange={(e) =>
-                          setFormData({ ...formData, status: e.target.value })
-                        }
-                        placeholder="What's on your mind?"
-                        maxLength={100}
-                        className="w-full px-5 py-3 rounded-md"
-                      />
+
+                      <div className="space-y-2">
+                        <Label>Pronouns</Label>
+                        <Input value={formData.pronouns} onChange={(e) => setFormData({ ...formData, pronouns: e.target.value })} placeholder="e.g., he/him, she/her, they/them" maxLength={50} />
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                        Pronouns
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.pronouns}
-                        onChange={(e) =>
-                          setFormData({ ...formData, pronouns: e.target.value })
-                        }
-                        placeholder="e.g., he/him, she/her, they/them"
-                        maxLength={50}
-                        className="w-full px-5 py-3 rounded-md"
-                      />
-                    </div>
-                  </div>
+                    <Separator />
 
-                  {/* Location */}
-                  <div className="space-y-5 pt-6 border-t" style={{ borderColor: 'var(--bg-primary)' }}>
-                    <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Location</h3>
-                    
-                    <div>
-                      <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                        Country
-                      </label>
-                      <select
-                        value={formData.country}
-                        onChange={(e) =>
-                          setFormData({ ...formData, country: e.target.value })
-                        }
-                        className="w-full px-5 py-3 rounded-md"
-                        style={{ fontSize: '16px' }}
-                      >
-                        <option value="">Select a country</option>
-                        {countries.map((country) => (
-                          <option key={country.code} value={country.code}>
-                            {country.name}
-                          </option>
+                    {/* Location */}
+                    <div className="space-y-5">
+                      <h3 className="text-lg font-semibold">Location</h3>
+
+                      <div className="space-y-2">
+                        <Label>Country</Label>
+                        <Select value={formData.country || 'none'} onValueChange={(v) => setFormData({ ...formData, country: v === 'none' ? '' : v })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a country" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Select a country</SelectItem>
+                            {countries.map((country) => (
+                              <SelectItem key={country.code} value={country.code}>{country.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {formData.country && (
+                          <div className="mt-2 flex items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                            <FlagEmoji countryCode={formData.country} className="text-2xl" />
+                            <span>{countries.find(c => c.code === formData.country)?.name}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>City</Label>
+                        <Input value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} placeholder="Your city" maxLength={100} />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Birthday (MM-DD)</Label>
+                        <Input value={formData.birthday} onChange={(e) => setFormData({ ...formData, birthday: e.target.value })} placeholder="e.g., 05-15" maxLength={5} pattern="\d{2}-\d{2}" />
+                        <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Format: MM-DD (Year not required for privacy)</p>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Links & Socials */}
+                    <div className="space-y-5">
+                      <h3 className="text-lg font-semibold">Links & Socials</h3>
+
+                      <div className="space-y-2">
+                        <Label>Website</Label>
+                        <Input type="url" value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} placeholder="https://yourwebsite.com" maxLength={200} />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {[
+                          { key: 'twitter', icon: faXTwitter, label: 'Twitter Username' },
+                          { key: 'github', icon: faGithub, label: 'GitHub Username' },
+                          { key: 'instagram', icon: faInstagram, label: 'Instagram Username' },
+                          { key: 'linkedin', icon: faLinkedin, label: 'LinkedIn Username' },
+                        ].map(({ key, icon, label }) => (
+                          <div key={key} className="space-y-2">
+                            <Label><FontAwesomeIcon icon={icon} inverse /> <span className="ml-2">{label}</span></Label>
+                            <Input value={(formData as any)[key]} onChange={(e) => setFormData({ ...formData, [key]: e.target.value })} placeholder="username" />
+                          </div>
                         ))}
-                      </select>
-                      {formData.country && (
-                        <div className="mt-2 flex items-center gap-2 text-base" style={{ color: 'var(--text-secondary)' }}>
-                          <FlagEmoji 
-                            countryCode={formData.country}
-                            className="text-3xl"
-                          />
-                          <span>Selected: {countries.find(c => c.code === formData.country)?.name}</span>
+                        <div className="space-y-2">
+                          <Label><FontAwesomeIcon icon={faSteam} inverse /> <span className="ml-2">Steam Username</span></Label>
+                          <Input value={formData.steamUsername} onChange={(e) => setFormData({ ...formData, steamUsername: e.target.value })} placeholder="username" maxLength={100} />
                         </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                        City
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.city}
-                        onChange={(e) =>
-                          setFormData({ ...formData, city: e.target.value })
-                        }
-                        placeholder="Your city"
-                        maxLength={100}
-                        className="w-full px-5 py-3 rounded-md"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                        Birthday (MM-DD)
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.birthday}
-                        onChange={(e) =>
-                          setFormData({ ...formData, birthday: e.target.value })
-                        }
-                        placeholder="e.g., 05-15"
-                        maxLength={5}
-                        pattern="\d{2}-\d{2}"
-                        className="w-full px-5 py-3 rounded-md"
-                      />
-                      <p className="text-xs mt-2" style={{ color: 'var(--text-tertiary)' }}>
-                        Format: MM-DD (Year not required for privacy)
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Social Links */}
-                  <div className="space-y-5 pt-6 border-t" style={{ borderColor: 'var(--bg-primary)' }}>
-                    <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Links & Socials</h3>
-                    
-                    <div>
-                      <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                        Website
-                      </label>
-                      <input
-                        type="url"
-                        value={formData.website}
-                        onChange={(e) =>
-                          setFormData({ ...formData, website: e.target.value })
-                        }
-                        placeholder="https://yourwebsite.com"
-                        maxLength={200}
-                        className="w-full px-5 py-3 rounded-md"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                        <FontAwesomeIcon icon={faXTwitter} inverse /> <span className="ml-2">Twitter Username</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.twitter}
-                          onChange={(e) =>
-                            setFormData({ ...formData, twitter: e.target.value })
-                          }
-                          placeholder="username"
-                          className="w-full px-5 py-3 rounded-md"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                        <FontAwesomeIcon icon={faGithub} inverse /> <span className="ml-2">GitHub Username</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.github}
-                          onChange={(e) =>
-                            setFormData({ ...formData, github: e.target.value })
-                          }
-                          placeholder="username"
-                          className="w-full px-5 py-3 rounded-md"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                        <FontAwesomeIcon icon={faInstagram} inverse /> <span className="ml-2">Instagram Username</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.instagram}
-                          onChange={(e) =>
-                            setFormData({ ...formData, instagram: e.target.value })
-                          }
-                          placeholder="username"
-                          className="w-full px-5 py-3 rounded-md"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                        <FontAwesomeIcon icon={faLinkedin} inverse /> <span className="ml-2">LinkedIn Username</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.linkedin}
-                          onChange={(e) =>
-                            setFormData({ ...formData, linkedin: e.target.value })
-                          }
-                          placeholder="username"
-                          className="w-full px-5 py-3 rounded-md"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                        <FontAwesomeIcon icon={faSteam} inverse /> <span className="ml-2">Steam Username</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.steamUsername}
-                          onChange={(e) =>
-                            setFormData({ ...formData, steamUsername: e.target.value })
-                          }
-                          placeholder="username"
-                          maxLength={100}
-                          className="w-full px-5 py-3 rounded-md"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Customization */}
-                  <div className="space-y-5 pt-6 border-t" style={{ borderColor: 'var(--bg-primary)' }}>
-                    <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Customization</h3>
-                    
-                    <div>
-                      <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                        Theme Color
-                      </label>
-                      <div className="flex items-center gap-4">
-                        <input
-                          type="color"
-                          value={formData.themeColor}
-                          onChange={(e) =>
-                            setFormData({ ...formData, themeColor: e.target.value })
-                          }
-                          className="h-12 w-20 rounded-md cursor-pointer"
-                        />
-                        <input
-                          type="text"
-                          value={formData.themeColor}
-                          onChange={(e) =>
-                            setFormData({ ...formData, themeColor: e.target.value })
-                          }
-                          placeholder="#8B5CF6"
-                          className="flex-1 px-5 py-3 rounded-md"
-                        />
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-                        Interests & Hobbies (max 10)
-                      </label>
-                      <div className="flex gap-2 mb-3">
-                        <input
-                          type="text"
-                          value={newInterest}
-                          onChange={(e) => setNewInterest(e.target.value)}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              addInterest();
-                            }
-                          }}
-                          placeholder="Add an interest..."
-                          maxLength={20}
-                          className="flex-1 px-5 py-3 rounded-md"
-                        />
-                        <button
-                          type="button"
-                          onClick={addInterest}
-                          disabled={formData.interests.length >= 10}
-                          className="px-6 py-3 text-white rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                          style={{ backgroundColor: formData.themeColor }}
-                        >
-                          Add
-                        </button>
-                      </div>
-                      {formData.interests.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {formData.interests.map((interest, idx) => (
-                            <span
-                              key={idx}
-                              className="px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2"
-                              style={{ backgroundColor: formData.themeColor, color: '#fff' }}
-                            >
-                              {interest}
-                              <button
-                                type="button"
-                                onClick={() => removeInterest(interest)}
-                                className="hover:opacity-70"
-                              >
-                                ✕
-                              </button>
-                            </span>
-                          ))}
+                    <Separator />
+
+                    {/* Customization */}
+                    <div className="space-y-5">
+                      <h3 className="text-lg font-semibold">Customization</h3>
+
+                      <div className="space-y-2">
+                        <Label>Theme Color</Label>
+                        <div className="flex items-center gap-4">
+                          <input type="color" value={formData.themeColor} onChange={(e) => setFormData({ ...formData, themeColor: e.target.value })} className="h-12 w-20 rounded-md cursor-pointer" />
+                          <Input value={formData.themeColor} onChange={(e) => setFormData({ ...formData, themeColor: e.target.value })} placeholder="#8B5CF6" className="flex-1" />
                         </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Privacy & Preferences */}
-                  <div className="space-y-5 pt-6 border-t" style={{ borderColor: 'var(--bg-primary)' }}>
-                    <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Privacy & Preferences</h3>
-                    
-                    <div className="flex items-center justify-between p-5 rounded-lg" style={{ backgroundColor: 'var(--bg-primary)' }}>
-                      <div className="flex-1">
-                        <label className="block text-base font-medium mb-1 cursor-pointer flex  items-center" style={{ color: 'var(--text-primary)' }}>
-                          <span className="material-symbols-outlined">notifications</span> <div className="ml-2">Notification Sounds</div>
-                        </label>
-                        <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-                          Play a sound when you receive new messages or notifications
-                        </p>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, notificationSoundsEnabled: !formData.notificationSoundsEnabled })}
-                        className="relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
-                        style={{ 
-                          backgroundColor: formData.notificationSoundsEnabled ? formData.themeColor : 'var(--text-tertiary)'
-                        }}
-                      >
-                        <span
-                          className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-                            formData.notificationSoundsEnabled ? 'translate-x-7' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                    </div>
 
-                    <div className="flex items-center justify-between p-5 rounded-lg" style={{ backgroundColor: 'var(--bg-primary)' }}>
-                      <div className="flex-1">
-                        <label className="block text-base font-medium mb-1 cursor-pointer flex items-center" style={{ color: 'var(--text-primary)' }}>
-                          <span className="material-symbols-outlined">desktop_windows</span> <div className="ml-2">Browser Notifications</div>
-                        </label>
-                        <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-                          {browserNotificationsSupported 
-                            ? 'Show native notifications even when the tab is not focused' 
-                            : 'Not supported in your browser'}
-                        </p>
-                        {browserNotificationsSupported && browserNotificationPermission === 'denied' && (
-                          <p className="text-xs mt-2 font-semibold" style={{ color: 'var(--danger)' }}>
-                            Permission denied. Please enable in your browser settings.
-                          </p>
-                        )}
-                        {browserNotificationsSupported && browserNotificationPermission === 'default' && formData.browserNotificationsEnabled && (
-                          <p className="text-xs mt-2 font-semibold" style={{ color: 'var(--warning)' }}>
-                            Click the toggle to request browser permission.
-                          </p>
+                      <div className="space-y-2">
+                        <Label>Interests & Hobbies (max 10)</Label>
+                        <div className="flex gap-2 mb-3">
+                          <Input value={newInterest} onChange={(e) => setNewInterest(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addInterest(); } }} placeholder="Add an interest..." maxLength={20} />
+                          <Button type="button" onClick={addInterest} disabled={formData.interests.length >= 10} style={{ backgroundColor: formData.themeColor }}>
+                            Add
+                          </Button>
+                        </div>
+                        {formData.interests.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {formData.interests.map((interest, idx) => (
+                              <Badge key={idx} style={{ backgroundColor: formData.themeColor, color: '#fff' }} className="gap-1">
+                                {interest}
+                                <button type="button" onClick={() => removeInterest(interest)} className="hover:opacity-70 ml-1">✕</button>
+                              </Badge>
+                            ))}
+                          </div>
                         )}
                       </div>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          if (!browserNotificationsSupported) return;
-                          
-                          const newValue = !formData.browserNotificationsEnabled;
-                          
-                          // If enabling and we don't have permission, request it
-                          if (newValue && browserNotificationPermission !== 'granted') {
-                            const result = await requestPermission();
-                            if (result !== 'granted') {
-                              return; // Don't enable if permission denied
+                    </div>
+
+                    <Separator />
+
+                    {/* Privacy & Preferences */}
+                    <div className="space-y-5">
+                      <h3 className="text-lg font-semibold">Privacy & Preferences</h3>
+
+                      {[
+                        {
+                          id: 'notification-sounds',
+                          icon: 'notifications',
+                          label: 'Notification Sounds',
+                          desc: 'Play a sound when you receive new messages or notifications',
+                          checked: formData.notificationSoundsEnabled,
+                          onChange: (v: boolean) => setFormData({ ...formData, notificationSoundsEnabled: v }),
+                          disabled: false,
+                        },
+                        {
+                          id: 'browser-notifications',
+                          icon: 'desktop_windows',
+                          label: 'Browser Notifications',
+                          desc: browserNotificationsSupported ? 'Show native notifications even when the tab is not focused' : 'Not supported in your browser',
+                          checked: formData.browserNotificationsEnabled && browserNotificationsSupported,
+                          onChange: async (v: boolean) => {
+                            if (!browserNotificationsSupported) return;
+                            if (v && browserNotificationPermission !== 'granted') {
+                              const result = await requestPermission();
+                              if (result !== 'granted') return;
                             }
-                          }
-                          
-                          setFormData({ ...formData, browserNotificationsEnabled: newValue });
-                        }}
-                        disabled={!browserNotificationsSupported || browserNotificationPermission === 'denied'}
-                        className="relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{ 
-                          backgroundColor: (formData.browserNotificationsEnabled && browserNotificationsSupported) ? formData.themeColor : 'var(--text-tertiary)'
-                        }}
-                      >
-                        <span
-                          className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-                            formData.browserNotificationsEnabled ? 'translate-x-7' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
+                            setFormData({ ...formData, browserNotificationsEnabled: v });
+                          },
+                          disabled: !browserNotificationsSupported || browserNotificationPermission === 'denied',
+                        },
+                        {
+                          id: 'show-badge',
+                          icon: 'trophy',
+                          label: 'Show Personality Badge',
+                          desc: 'Display your personality quiz badge on your profile',
+                          checked: formData.showPersonalityBadge,
+                          onChange: (v: boolean) => setFormData({ ...formData, showPersonalityBadge: v }),
+                          disabled: false,
+                        },
+                      ].map((item) => (
+                        <div key={item.id} className="flex items-center justify-between p-5 rounded-lg" style={{ backgroundColor: 'var(--bg-primary)' }}>
+                          <div className="flex-1">
+                            <Label htmlFor={item.id} className="flex items-center gap-2 cursor-pointer font-medium text-base">
+                              <span className="material-symbols-outlined">{item.icon}</span>
+                              {item.label}
+                            </Label>
+                            <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>{item.desc}</p>
+                            {item.id === 'browser-notifications' && browserNotificationsSupported && browserNotificationPermission === 'denied' && (
+                              <p className="text-xs mt-2 font-semibold" style={{ color: 'var(--danger)' }}>Permission denied. Please enable in your browser settings.</p>
+                            )}
+                          </div>
+                          <Switch id={item.id} checked={item.checked} onCheckedChange={item.onChange} disabled={item.disabled} />
+                        </div>
+                      ))}
                     </div>
 
-                    <div className="flex items-center justify-between p-5 rounded-lg" style={{ backgroundColor: 'var(--bg-primary)' }}>
-                      <div className="flex-1">
-                        <label className="block text-base font-medium mb-1 cursor-pointer flex items-center" style={{ color: 'var(--text-primary)' }}>
-                          <span className="material-symbols-outlined">trophy</span> <div className="ml-2">Show Personality Badge</div>
-                        </label>
-                        <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-                          Display your personality quiz badge on your profile
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, showPersonalityBadge: !formData.showPersonalityBadge })}
-                        className="relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
-                        style={{ 
-                          backgroundColor: formData.showPersonalityBadge ? formData.themeColor : 'var(--text-tertiary)'
-                        }}
-                      >
-                        <span
-                          className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-                            formData.showPersonalityBadge ? 'translate-x-7' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
+                    <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                      <Button type="submit" className="flex-1 app-btn-success">Save Changes</Button>
+                      <Button type="button" variant="destructive" className="flex-1" onClick={() => setEditing(false)}>Cancel</Button>
                     </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                    <button
-                      type="submit"
-                      className="flex-1 px-5 py-3 text-white rounded-md transition font-medium"
-                      style={{ backgroundColor: 'var(--success)' }}
-                    >
-                      Save Changes
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEditing(false)}
-                      className="flex-1 px-5 py-3 text-white rounded-md transition font-medium"
-                      style={{ backgroundColor: 'var(--danger)' }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </div>
+                  </form>
+                </CardContent>
+              </Card>
             )}
 
             {/* Change Username */}
-            <div className="rounded-lg p-10" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-              <h2 className="text-2xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
-                Change Username
-              </h2>
-              <p className="text-sm mb-8 font-medium" style={{ color: 'var(--text-tertiary)' }}>
-                You can change your username once every 7 days.
-              </p>
+            <Card>
+              <CardHeader>
+                <CardTitle>Change Username</CardTitle>
+                <p className="text-sm font-medium" style={{ color: 'var(--text-tertiary)' }}>You can change your username once every 7 days.</p>
+              </CardHeader>
+              <CardContent>
+                {!canChangeUsername && profile.lastUsernameChange && (
+                  <Alert className="mb-6">
+                    <AlertDescription className="font-semibold">
+                      Available in {Math.ceil((new Date(profile.lastUsernameChange).getTime() + 7 * 24 * 60 * 60 * 1000 - Date.now()) / (24 * 60 * 60 * 1000))} day(s)
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <form onSubmit={handleUsernameChange} className="space-y-4">
+                  <Input placeholder="New username" value={formData.newUsername} onChange={(e) => setFormData({ ...formData, newUsername: e.target.value })} disabled={!canChangeUsername} />
+                  <Button type="submit" disabled={!canChangeUsername} className="w-full" style={{ backgroundColor: canChangeUsername ? 'var(--accent)' : 'var(--text-tertiary)' }}>
+                    {canChangeUsername ? 'Change Username' : 'Cooldown Active'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
 
-              {!canChangeUsername && profile.lastUsernameChange && (
-                <div className="mb-7 p-5 rounded-lg" style={{ backgroundColor: 'var(--warning)', color: '#000' }}>
-                  <p className="font-semibold">
-                    Available in {Math.ceil(
-                      (new Date(profile.lastUsernameChange).getTime() +
-                        7 * 24 * 60 * 60 * 1000 -
-                        Date.now()) /
-                        (24 * 60 * 60 * 1000)
-                    )}{' '}
-                    day(s)
-                  </p>
-                </div>
-              )}
+            {/* Danger Zone */}
+            <Card style={{ borderColor: 'var(--danger)', borderWidth: '2px' }}>
+              <CardHeader>
+                <CardTitle style={{ color: 'var(--danger)' }}>Danger Zone</CardTitle>
+                <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                  Once you delete your account, there is no going back. All your data, messages, and connections will be permanently deleted.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
+                  Delete My Account
+                </Button>
+              </CardContent>
+            </Card>
+          </>
+        )}
 
-              <form onSubmit={handleUsernameChange} className="space-y-5">
-                <input
-                  type="text"
-                  placeholder="New username"
-                  value={formData.newUsername}
-                  onChange={(e) =>
-                    setFormData({ ...formData, newUsername: e.target.value })
-                  }
-                  disabled={!canChangeUsername}
-                  className="w-full px-5 py-3 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-                <button
-                  type="submit"
-                  disabled={!canChangeUsername}
-                  className="w-full px-5 py-3 text-white rounded-md transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: canChangeUsername ? 'var(--accent)' : 'var(--text-tertiary)' }}
-                >
-                  {canChangeUsername ? 'Change Username' : 'Cooldown Active'}
-                </button>
-              </form>
-            </div>
-
-            {/* Danger Zone - Delete Account */}
-            <div className="rounded-lg p-10 border-2" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--danger)' }}>
-              <h2 className="text-2xl font-bold mb-3" style={{ color: 'var(--danger)' }}>
-                Danger Zone
-              </h2>
-              <p className="text-sm mb-8 font-medium" style={{ color: 'var(--text-secondary)' }}>
-                Once you delete your account, there is no going back. All your data, messages, and connections will be permanently deleted.
-              </p>
-              
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="w-full sm:w-auto px-8 py-3 text-white rounded-md transition font-medium"
-                style={{ backgroundColor: 'var(--danger)' }}
+        {/* Delete Account Dialog */}
+        <Dialog open={showDeleteConfirm} onOpenChange={(open) => { if (!deleting) { setShowDeleteConfirm(open); if (!open) setDeleteConfirmText(''); } }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle style={{ color: 'var(--danger)' }}>Delete Account</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              This action cannot be undone. This will permanently delete your account, all your messages, friendships, and remove you from all group chats.
+            </p>
+            <p className="text-sm font-semibold mt-4">
+              Please type{' '}
+              <span className="font-mono px-2 py-1 rounded text-sm" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--accent)' }}>
+                {profile?.username}
+              </span>{' '}
+              to confirm:
+            </p>
+            <Input
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="Enter your username"
+              disabled={deleting}
+              className="mt-2"
+            />
+            <DialogFooter className="gap-3">
+              <Button
+                variant="destructive"
+                onClick={handleDeleteAccount}
+                disabled={deleting || deleteConfirmText !== profile?.username}
               >
-                Delete My Account
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Delete Confirmation Modal */}
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="rounded-lg p-10 max-w-md w-full" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-              <h2 className="text-2xl font-bold mb-5" style={{ color: 'var(--danger)' }}>
-                Delete Account
-              </h2>
-              <p className="text-base mb-6" style={{ color: 'var(--text-secondary)' }}>
-                This action cannot be undone. This will permanently delete your account, all your messages, friendships, and remove you from all group chats.
-              </p>
-              <p className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-                Please type <span className="font-mono px-2 py-1 rounded" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--accent)' }}>{profile?.username}</span> to confirm:
-              </p>
-              <input
-                type="text"
-                value={deleteConfirmText}
-                onChange={(e) => setDeleteConfirmText(e.target.value)}
-                placeholder="Enter your username"
-                className="w-full px-5 py-3 rounded-md mb-6"
-                disabled={deleting}
-              />
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={handleDeleteAccount}
-                  disabled={deleting || deleteConfirmText !== profile?.username}
-                  className="flex-1 px-5 py-3 text-white rounded-md transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: 'var(--danger)' }}
-                >
-                  {deleting ? 'Deleting...' : 'Delete Account'}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDeleteConfirm(false);
-                    setDeleteConfirmText('');
-                  }}
-                  disabled={deleting}
-                  className="flex-1 px-5 py-3 text-white rounded-md transition font-medium disabled:opacity-50"
-                  style={{ backgroundColor: 'var(--text-tertiary)' }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+                {deleting ? 'Deleting...' : 'Delete Account'}
+              </Button>
+              <Button variant="secondary" onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); }} disabled={deleting}>
+                Cancel
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Personality Test Modal */}
         <PersonalityTestModal

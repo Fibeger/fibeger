@@ -4,6 +4,7 @@ import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import NotificationBell from './NotificationBell';
+import { Button } from '@/components/ui/button';
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -123,13 +124,9 @@ export default function Navbar() {
                 {(session.user as any)?.username || session.user?.email}
               </span>
             </div>
-            <button
-              onClick={() => signOut()}
-              className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-md font-semibold text-sm transition-all shadow-md hover:shadow-lg focus:outline-2 focus:outline-yellow-400 focus:outline-offset-2"
-              aria-label="Sign out"
-            >
+            <Button variant="destructive" onClick={() => signOut()} aria-label="Sign out">
               Sign Out
-            </button>
+            </Button>
           </div>
         </div>
       </div>
