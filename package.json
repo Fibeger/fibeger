@@ -4,6 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:local": "npm run db:setup:local && next dev",
+    "db:setup:local": "prisma generate --schema=prisma/schema.dev.prisma && prisma db push --schema=prisma/schema.dev.prisma --accept-data-loss",
+    "db:push:local": "prisma db push --schema=prisma/schema.dev.prisma",
+    "db:studio:local": "prisma studio --schema=prisma/schema.dev.prisma",
     "build": "node scripts/use-production-schema.js && prisma db push --accept-data-loss && prisma generate && next build",
     "build:container": "node scripts/use-production-schema.js && prisma generate && next build",
     "start": "next start",
