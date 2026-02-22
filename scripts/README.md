@@ -416,8 +416,8 @@ loginctl enable-linger $USER
 
 ## Additional Resources
 
-- **Deployment Guide:** `../docs/DEPLOYMENT_GUIDE.md`
-- **Deployment Checklist:** `../docs/DEPLOYMENT_CHECKLIST.md`
+- **Deployment Guide:** `../docs/DEPLOYMENT.md`
+- **Operations Guide:** `../docs/OPERATIONS.md`
 - **Tailscale SSH Docs:** https://tailscale.com/kb/1193/tailscale-ssh
 - **Cloudflare Tunnel Docs:** https://developers.cloudflare.com/cloudflare-one/connections/connect-apps
 - **Podman Compose:** https://github.com/containers/podman-compose
@@ -446,5 +446,5 @@ If you encounter issues:
    - .env file: Verify all variables are set
 
 4. Consult documentation:
-   - `DEPLOYMENT_GUIDE.md` for detailed instructions
-   - `DEPLOYMENT_CHECKLIST.md` for step-by-step verification
+   - `DEPLOYMENT.md` for detailed instructions
+   - `OPERATIONS.md` for server operations guide
