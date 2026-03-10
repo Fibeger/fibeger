@@ -103,8 +103,8 @@ export default function FeedPage() {
       return;
     }
 
-    if (file.size > 50 * 1024 * 1024) {
-      alert("File size must be less than 50MB");
+    if (file.size > 500 * 1024 * 1024) {
+      alert("File size must be less than 500MB");
       return;
     }
 
@@ -581,7 +581,7 @@ export default function FeedPage() {
                     className="text-xs"
                     style={{ color: "var(--text-muted)" }}
                   >
-                    PNG, JPG, GIF, WebP, MP4, WebM (max 50MB)
+                    PNG, JPG, GIF, WebP, MP4, WebM (max 500MB)
                   </p>
                 </div>
               )}
