@@ -389,7 +389,7 @@ export default function FeedPage() {
         open={!!selectedPost}
         onOpenChange={(open) => !open && setSelectedPost(null)}
       >
-        <DialogContent className="max-w-6xl h-[90vh] p-0">
+        <DialogContent className="sm:max-w-6xl h-[90vh] p-0">
           {selectedPost && (
             <div className="flex flex-col lg:flex-row h-full">
               {/* Media */}
