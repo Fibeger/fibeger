@@ -389,15 +389,15 @@ export default function FeedPage() {
         open={!!selectedPost}
         onOpenChange={(open) => !open && setSelectedPost(null)}
       >
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-auto p-0">
+        <DialogContent className="max-w-6xl h-[90vh] p-0">
           {selectedPost && (
-            <div className="flex flex-col lg:flex-row">
+            <div className="flex flex-col lg:flex-row h-full">
               {/* Media */}
-              <div className="flex-1 bg-black flex items-center justify-center p-4">
+              <div className="flex-1 bg-black flex items-center justify-center min-h-0">
                 {selectedPost.mediaType === "video" ? (
                   <video
                     src={selectedPost.mediaUrl}
-                    className="max-w-full max-h-[80vh] object-contain"
+                    className="max-w-full max-h-full object-contain"
                     controls
                     autoPlay
                   />
@@ -405,13 +405,13 @@ export default function FeedPage() {
                   <img
                     src={selectedPost.mediaUrl}
                     alt={selectedPost.caption || "Post"}
-                    className="max-w-full max-h-[80vh] object-contain"
+                    className="max-w-full max-h-full object-contain"
                   />
                 )}
               </div>
 
               {/* Info */}
-              <div className="lg:w-96 p-6 flex flex-col" style={{ backgroundColor: "var(--bg-secondary)" }}>
+              <div className="lg:w-96 p-6 flex flex-col overflow-y-auto" style={{ backgroundColor: "var(--bg-secondary)" }}>
                 <div
                   className="flex items-center gap-3 mb-6 pb-6"
                   style={{ borderBottom: "1px solid var(--border-color)" }}
