@@ -17,7 +17,12 @@ export type EventType =
   | 'message_deleted'
   | 'conversation_deleted'
   | 'group_deleted'
-  | 'friend_removed';
+  | 'friend_removed'
+  | 'call_started'
+  | 'call_ended'
+  | 'call_participant_joined'
+  | 'call_participant_left'
+  | 'call_signal';
 
 export interface EventData {
   userId: number;

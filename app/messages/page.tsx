@@ -4,10 +4,13 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRealtimeEvents } from '@/app/hooks/useRealtimeEvents';
+import { useWebRTC, ActiveCall } from '@/app/hooks/useWebRTC';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import PageLoader from '@/app/components/PageLoader';
 import UserAvatar from '@/app/components/UserAvatar';
+import CallBanner from '@/app/components/CallBanner';
+import GroupCallOverlay from '@/app/components/GroupCallOverlay';
 
 function linkifyText(text: string, router: any) {
   const combinedRegex = /(https?:\/\/[^\s]+)|(@everyone)|(@[a-zA-Z0-9_]+)/g;
@@ -120,6 +123,8 @@ function MessagesContent() {
   const [mentionQuery, setMentionQuery] = useState('');
   const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
   const [viewingMedia, setViewingMedia] = useState<{ url: string; type: string; name: string } | null>(null);
+  const [activeCall, setActiveCall] = useState<ActiveCall | null>(null);
+  const [joiningCall, setJoiningCall] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -127,6 +132,23 @@ function MessagesContent() {
   const groupAvatarInputRef = useRef<HTMLInputElement>(null);
   const [uploadingGroupAvatar, setUploadingGroupAvatar] = useState(false);
   const { on, off } = useRealtimeEvents();
+
+  const currentUserId = parseInt((session?.user as any)?.id || '0');
+  const {
+    inCall,
+    localStream,
+    remoteStreams,
+    screenStream,
+    isAudioEnabled,
+    isVideoEnabled,
+    isScreenSharing,
+    startCall,
+    joinCall,
+    leaveCall,
+    toggleAudio,
+    toggleVideo,
+    toggleScreenShare,
+  } = useWebRTC({ currentUserId });
 
   useEffect(() => {
     if (status === 'unauthenticated') { router.push('/auth/login'); return; }
@@ -187,6 +209,42 @@ function MessagesContent() {
     const handleGroupDeleted = (event: any) => { if (groupId && parseInt(groupId) === event.data.groupChatId) router.push('/messages'); };
     const handleGroupUpdated = (event: any) => { if (groupId && parseInt(groupId) === event.data.groupChatId && event.data.group) setGroupChat(event.data.group); };
 
+    const handleCallStarted = (event: any) => {
+      const { groupChatId: eventGroupId, call } = event.data;
+      if (groupId && parseInt(groupId) === eventGroupId) {
+        setActiveCall(call);
+      }
+    };
+
+    const handleCallEnded = (event: any) => {
+      const { groupChatId: eventGroupId } = event.data;
+      if (groupId && parseInt(groupId) === eventGroupId) {
+        setActiveCall(null);
+      }
+    };
+
+    const handleCallParticipantJoined = (event: any) => {
+      const { groupChatId: eventGroupId, user } = event.data;
+      if (groupId && parseInt(groupId) === eventGroupId && user) {
+        setActiveCall((prev) => {
+          if (!prev) return prev;
+          const alreadyIn = prev.participants.some((p) => p.user.id === user.id);
+          if (alreadyIn) return prev;
+          return { ...prev, participants: [...prev.participants, { user, joinedAt: new Date().toISOString() }] };
+        });
+      }
+    };
+
+    const handleCallParticipantLeft = (event: any) => {
+      const { groupChatId: eventGroupId, userId: leftUserId } = event.data;
+      if (groupId && parseInt(groupId) === eventGroupId) {
+        setActiveCall((prev) => {
+          if (!prev) return prev;
+          return { ...prev, participants: prev.participants.filter((p) => p.user.id !== leftUserId) };
+        });
+      }
+    };
+
     const unsubMessage = on('message', handleMessage);
     const unsubTyping = on('typing', handleTyping);
     const unsubReaction = on('reaction', handleReaction);
@@ -194,11 +252,17 @@ function MessagesContent() {
     const unsubConversationDeleted = on('conversation_deleted', handleConversationDeleted);
     const unsubGroupDeleted = on('group_deleted', handleGroupDeleted);
     const unsubGroupUpdated = on('group_updated', handleGroupUpdated);
+    const unsubCallStarted = on('call_started', handleCallStarted);
+    const unsubCallEnded = on('call_ended', handleCallEnded);
+    const unsubCallParticipantJoined = on('call_participant_joined', handleCallParticipantJoined);
+    const unsubCallParticipantLeft = on('call_participant_left', handleCallParticipantLeft);
 
     return () => {
       unsubMessage(); unsubTyping(); unsubReaction();
       unsubMessageDeleted(); unsubConversationDeleted();
       unsubGroupDeleted(); unsubGroupUpdated();
+      unsubCallStarted(); unsubCallEnded();
+      unsubCallParticipantJoined(); unsubCallParticipantLeft();
     };
   }, [on, dmId, groupId, router, session]);
 
@@ -215,7 +279,7 @@ function MessagesContent() {
 
   const fetchConversation = async (id: number) => {
     try {
-      setGroupChat(null); setMessages([]);
+      setGroupChat(null); setMessages([]); setActiveCall(null);
       const res = await fetch('/api/conversations');
       if (res.ok) {
         const data = await res.json();
@@ -235,7 +299,18 @@ function MessagesContent() {
         const data = await res.json();
         const group = data.find((g: GroupChat) => g.id === id);
         setGroupChat(group || null);
-        if (group) { fetchMessages(id, 'group'); markAsRead(id, 'group'); }
+        if (group) {
+          fetchMessages(id, 'group');
+          markAsRead(id, 'group');
+          // Fetch active call state
+          try {
+            const callRes = await fetch(`/api/groupchats/${id}/call`);
+            if (callRes.ok) {
+              const callData = await callRes.json();
+              setActiveCall(callData.call);
+            }
+          } catch { /* non-critical */ }
+        }
       }
     } catch { console.error('Failed to load group chat'); }
     finally { setLoading(false); }
@@ -264,6 +339,31 @@ function MessagesContent() {
         body: JSON.stringify({ conversationId: type === 'dm' ? id : undefined, groupChatId: type === 'group' ? id : undefined }),
       });
     } catch { console.error('Failed to mark messages as read'); }
+  };
+
+  const handleStartCall = async () => {
+    if (!groupId) return;
+    try {
+      await startCall(parseInt(groupId));
+    } catch (err: any) {
+      alert(err?.message || 'Failed to start call');
+    }
+  };
+
+  const handleJoinCall = async () => {
+    if (!groupId || !activeCall) return;
+    setJoiningCall(true);
+    try {
+      await joinCall(parseInt(groupId));
+    } catch (err: any) {
+      alert(err?.message || 'Failed to join call');
+    } finally {
+      setJoiningCall(false);
+    }
+  };
+
+  const handleLeaveCall = async () => {
+    await leaveCall();
   };
 
   const handleTypingIndicator = async () => {
@@ -596,7 +696,20 @@ function MessagesContent() {
             {groupChat && (
               <>
                 <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>({groupChat.members.length} members)</span>
-                <Button variant="ghost" size="icon" onClick={() => setShowGroupSettings(true)} title="Group Settings" className="ml-auto" style={{ color: 'var(--text-secondary)' }}>
+                {/* Call button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={activeCall ? handleJoinCall : handleStartCall}
+                  title={activeCall ? 'Join active call' : 'Start voice call'}
+                  className="ml-auto"
+                  style={{ color: activeCall ? '#57f287' : 'var(--text-secondary)' }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.01L6.6 10.8z"/>
+                  </svg>
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => setShowGroupSettings(true)} title="Group Settings" style={{ color: 'var(--text-secondary)' }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 16C13.6569 16 15 14.6569 15 13C15 11.3431 13.6569 10 12 10C10.3431 10 9 11.3431 9 13C9 14.6569 10.3431 16 12 16Z" />
                     <path d="M3 13C3 12.5341 3.03591 12.0765 3.10509 11.6296L5.74864 11.1567C5.88167 10.6437 6.07567 10.1533 6.32336 9.69318L4.81331 7.51741C5.32331 6.82107 5.92607 6.19852 6.60487 5.66794L8.81517 7.13088C9.27059 6.87428 9.75654 6.67426 10.2641 6.53773L10.7295 3.84479C11.1506 3.78129 11.5792 3.75 12.0114 3.75C12.4784 3.75 12.9371 3.78875 13.3849 3.86233L13.8503 6.52557C14.3595 6.65825 14.8474 6.85003 15.3055 7.09486L17.5028 5.63344C18.1846 6.1633 18.7899 6.78476 19.3015 7.48067L17.7889 9.66587C18.0383 10.1284 18.2335 10.6214 18.3672 11.1377L21.0172 11.6106C21.0876 12.0639 21.125 12.5279 21.125 13C21.125 13.4377 21.0929 13.8676 21.0305 14.2888L18.3801 14.7617C18.2471 15.2747 18.0531 15.7651 17.8054 16.2252L19.3155 18.401C18.8055 19.0973 18.2027 19.7199 17.5239 20.2505L15.3136 18.7875C14.8582 19.0441 14.3722 19.2441 13.8647 19.3807L13.3993 22.0736C12.9782 22.1371 12.5496 22.1684 12.1174 22.1684C11.6504 22.1684 11.1917 22.1296 10.7439 22.056L10.2785 19.3928C9.76927 19.2601 9.28136 19.0683 8.82323 18.8235L6.62603 20.285C5.94416 19.7551 5.33897 19.1336 4.82731 18.4377L6.33987 16.2525C6.09053 15.79 5.89529 15.297 5.7616 14.7807L3.11153 14.3078C3.04113 13.8545 3.00373 13.3905 3.00373 12.9528C3.00373 12.9193 3.00391 12.8858 3.00427 12.8524L3 13Z" />
@@ -605,6 +718,29 @@ function MessagesContent() {
               </>
             )}
           </div>
+
+          {/* Call Banner – shown when there's an active call the user hasn't joined */}
+          {groupChat && activeCall && !inCall && (
+            <CallBanner call={activeCall} onJoin={handleJoinCall} joining={joiningCall} />
+          )}
+
+          {/* Group Call Overlay – shown when the user is in a call */}
+          {groupChat && inCall && activeCall && (
+            <GroupCallOverlay
+              call={activeCall}
+              currentUserId={currentUserId}
+              localStream={localStream}
+              remoteStreams={remoteStreams}
+              screenStream={screenStream}
+              isAudioEnabled={isAudioEnabled}
+              isVideoEnabled={isVideoEnabled}
+              isScreenSharing={isScreenSharing}
+              onLeave={handleLeaveCall}
+              onToggleAudio={toggleAudio}
+              onToggleVideo={toggleVideo}
+              onToggleScreenShare={toggleScreenShare}
+            />
+          )}
 
           {/* Media Viewer */}
           {viewingMedia && (

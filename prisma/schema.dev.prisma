@@ -56,6 +56,8 @@ model User {
   reactions             Reaction[]
   feedPosts             FeedPost[]
   feedLikes             FeedLike[]
+  startedCalls          GroupCall[]           @relation("startedCalls")
+  callParticipations    GroupCallParticipant[] @relation("callParticipations")
 }
 
 model Friend {
@@ -116,6 +118,7 @@ model GroupChat {
 
   members     GroupChatMember[]
   messages    Message[]
+  calls       GroupCall[]
 }
 
 model GroupChatMember {
@@ -130,6 +133,35 @@ model GroupChatMember {
   user       User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([groupChatId, userId])
+}
+
+model GroupCall {
+  id           Int      @id @default(autoincrement())
+  groupChatId  Int
+  startedById  Int
+  startedAt    DateTime @default(now())
+  endedAt      DateTime?
+  status       String   @default("active") // active, ended
+
+  groupChat    GroupChat @relation(fields: [groupChatId], references: [id], onDelete: Cascade)
+  startedBy    User @relation("startedCalls", fields: [startedById], references: [id], onDelete: Cascade)
+  participants GroupCallParticipant[]
+
+  @@index([groupChatId, status])
+}
+
+model GroupCallParticipant {
+  id       Int      @id @default(autoincrement())
+  callId   Int
+  userId   Int
+  joinedAt DateTime @default(now())
+  leftAt   DateTime?
+
+  call     GroupCall @relation(fields: [callId], references: [id], onDelete: Cascade)
+  user     User @relation("callParticipations", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([callId, userId])
+  @@index([callId])
 }
 
 model Message {
