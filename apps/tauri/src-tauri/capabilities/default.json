@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicegui/tauri-v2-json-schema/refs/heads/main/capability.json",
+  "identifier": "default",
+  "description": "Default capability for the Fibeger app",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "notification:default",
+    "notification:allow-is-permission-granted",
+    "notification:allow-request-permission",
+    "notification:allow-notify",
+    "store:default",
+    "store:allow-get",
+    "store:allow-set",
+    "store:allow-delete",
+    "store:allow-save",
+    "store:allow-load",
+    "http:default",
+    "http:allow-fetch",
+    "http:allow-fetch-cancel",
+    "http:allow-fetch-read-body",
+    "http:allow-fetch-send",
+    "deep-link:default",
+    "upload:default",
+    "upload:allow-upload"
+  ]
+}

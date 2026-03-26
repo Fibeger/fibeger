@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import "./globals.css";
+import "@fibeger/ui/styles/globals.css";
 import { Providers } from "./providers";
 import Sidebar from "./components/Sidebar";
 import { SidebarProvider } from "./context/SidebarContext";
 import MobileHeader from "./components/MobileHeader";
 import { headers } from "next/headers";
-import { Noto_Sans } from "next/font/google";
 
 export const metadata: Metadata = {
   title: "Fibeger",
@@ -32,7 +31,7 @@ export default async function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
       </head>
       <body
-        className={`noto-sans-regular antialiased`}
+        className="noto-sans-regular antialiased"
         style={{ backgroundColor: '#313338' }}
       >
         <a href="#main-content" className="skip-link">Skip to main content</a>

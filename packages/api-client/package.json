@@ -1,0 +1,18 @@
+{
+  "name": "@fibeger/api-client",
+  "version": "0.2.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./endpoints/*": "./src/endpoints/*.ts"
+  },
+  "scripts": {
+    "lint": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}

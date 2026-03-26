@@ -1,13 +1,15 @@
 "use client";
 
-import { SessionProvider } from "next-auth/react";
+import { AuthContext, useAuthProvider } from "./hooks/useAuth";
 import BrowserNotifications from "./components/BrowserNotifications";
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const auth = useAuthProvider();
+
   return (
-    <SessionProvider>
+    <AuthContext.Provider value={auth}>
       <BrowserNotifications />
       {children}
-    </SessionProvider>
+    </AuthContext.Provider>
   );
 }

@@ -2,8 +2,6 @@
   "compilerOptions": {
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
@@ -12,27 +10,13 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": ["./*"]
-    }
+    "skipLibCheck": true
   },
-  "include": [
-    "next-env.d.ts",
-    "types/**/*.ts",
-    "app/**/*.ts",
-    "app/**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+  "references": [
+    { "path": "packages/ui" },
+    { "path": "packages/api-client" },
+    { "path": "apps/web" }
   ],
-  "exclude": [
-    "node_modules",
-    ".next",
-    "prisma.config.ts"
-  ]
+  "include": [],
+  "exclude": ["node_modules"]
 }

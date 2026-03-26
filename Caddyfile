@@ -9,15 +9,13 @@
 	}
 	
 	encode zstd gzip
-	
-	# MinIO console (subdomain)
+
 	@minioConsole host minio.fibeger.com
 	reverse_proxy @minioConsole minio:9001 {
 		header_up X-Real-IP {http.request.header.CF-Connecting-IP}
 		header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
 	}
 
-	# MinIO S3 API under /minio on apex
 	@minioAPI path /minio*
 	handle @minioAPI {
 		uri strip_prefix /minio
@@ -27,9 +25,18 @@
 		}
 	}
 
-	# Default: Next.js app (everything else)
-	reverse_proxy app:3000 {
-		header_up X-Real-IP {http.request.header.CF-Connecting-IP}
-		header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
+	@api path /api/* /ws
+	handle @api {
+		reverse_proxy backend:8080 {
+			header_up X-Real-IP {http.request.header.CF-Connecting-IP}
+			header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
+		}
+	}
+
+	handle {
+		reverse_proxy web:3000 {
+			header_up X-Real-IP {http.request.header.CF-Connecting-IP}
+			header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
+		}
 	}
 }

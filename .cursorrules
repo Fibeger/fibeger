@@ -1,41 +1,42 @@
 # Project-Specific Rules for Fibeger
 
-## Database Schema Management
-**CRITICAL**: This project uses TWO Prisma schema files:
-1. `prisma/schema.prisma` - Development schema (SQLite)
-2. `prisma/schema.production.prisma` - Production schema (PostgreSQL)
+## Architecture
+This is a monorepo with three main parts:
+1. **Go Backend** (`backend/`) - Gin + GORM REST API with WebSocket
+2. **Next.js Web App** (`apps/web/`) - Web frontend
+3. **Tauri 2 App** (`apps/tauri/`) - Desktop (Windows) + Mobile (Android/iOS)
+4. **Shared UI** (`packages/ui/`) - React components shared across frontends
+5. **API Client** (`packages/api-client/`) - TypeScript HTTP + WebSocket client
 
-**ALWAYS update BOTH schema files when making any database changes.**
-- Never update only one schema file
-- Keep the schemas in sync (only difference should be the database provider)
-- After updating schemas, run migrations for the active schema
+## Backend (Go)
+- Framework: Gin (github.com/gin-gonic/gin)
+- ORM: GORM (gorm.io/gorm) with PostgreSQL
+- Auth: JWT (golang-jwt/jwt/v5) + bcrypt
+- Realtime: WebSocket (gorilla/websocket) with Hub pattern
+- Storage: AWS S3 SDK v2 (compatible with MinIO)
+- Entry point: `backend/cmd/server/main.go`
+- Layered: handler -> service -> model -> GORM
 
-## File Structure
-- API routes: `app/api/`
-- Components: `app/components/`
-- Pages: `app/` with Next.js App Router structure
-- Database: Prisma ORM with SQLite (dev) and PostgreSQL (prod)
+## Frontend
+- Both apps use `@fibeger/api-client` for all backend communication
+- Both apps use `@fibeger/ui` for shared components
+- Web uses Next.js App Router with server-side cookie auth
+- Tauri uses React Router SPA with platform secure storage
+- Realtime via WebSocket (not SSE)
+- Design system: Discord-like dark theme via CSS variables
+
+## Database
+- PostgreSQL in production
+- GORM AutoMigrate for development
+- Same schema as original Prisma models
+
+## Deployment
+- Docker Compose: Postgres, MinIO, Go backend, Next.js web, Caddy
+- Caddy routes /api/* and /ws to Go backend, everything else to web app
+- Tauri apps built separately for each platform
 
 ## Best Practices
 - Always check for linter errors after making changes
 - Use the existing design system (CSS variables: --accent, --bg-primary, etc.)
-- Follow the existing patterns for API routes and authentication
-- Test database changes with migrations before committing
-
-## Uploads
-- User avatars: `public/uploads/avatars/`
-- Profile banners: `public/uploads/banners/`
-- Feed media: `public/uploads/feed/`
-- Messages: `public/uploads/messages/`
-- Always validate file types and sizes
-- Clean up old files when replacing (avatars, banners)
-
-## Authentication
-- Uses NextAuth.js
-- Session management via JWT
-- Always check session in API routes with `getServerSession(authOptions)`
-
-## Realtime Features
-- Server-Sent Events (SSE) for real-time updates
-- Event system in `app/lib/events.ts`
-- Don't use polling - use SSE architecture
+- API changes must be reflected in both the Go handler AND the api-client package
+- Test WebSocket events across both web and Tauri clients

@@ -1,13 +1,26 @@
-import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+"use client";
 
-export default async function Home() {
-  const session = await getServerSession(authOptions);
+import { useEffect } from "react";
+import { useAuth } from "./hooks/useAuth";
+import { useRouter } from "next/navigation";
 
-  if (session) {
-    redirect('/feed');
-  } else {
-    redirect('/auth/login');
-  }
+export default function Home() {
+  const { isAuthenticated, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading) {
+      if (isAuthenticated) {
+        router.replace("/feed");
+      } else {
+        router.replace("/auth/login");
+      }
+    }
+  }, [isAuthenticated, loading, router]);
+
+  return (
+    <div style={{ backgroundColor: '#313338', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'var(--accent)' }} />
+    </div>
+  );
 }

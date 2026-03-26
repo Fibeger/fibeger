@@ -23,7 +23,7 @@ services:
       MINIO_ROOT_USER: ${ADMIN_USER}
       MINIO_ROOT_PASSWORD: ${ADMIN_PASSWORD}
     ports:
-      - "192.168.50.80:9001:9001"  # Expose console to local network only
+      - "192.168.50.80:9001:9001"
     volumes:
       - minio_data:/data
     healthcheck:
@@ -58,21 +58,21 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@fibeger.com
       PGADMIN_DEFAULT_PASSWORD: ${ADMIN_PASSWORD}
     ports:
-    - "127.0.0.1:5050:80"  # Expose only to localhost
+    - "127.0.0.1:5050:80"
     networks: [fib-net]
     depends_on:
       db:
         condition: service_healthy
 
-  app:
-    image: ${IMAGE_REF}
+  backend:
+    image: ${BACKEND_IMAGE_REF:-fibeger-backend:latest}
     restart: unless-stopped
     environment:
-      NODE_ENV: production
-      NEXTAUTH_URL: ${NEXTAUTH_URL}
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
-      PORT: 3000
       DATABASE_URL: postgres://${ADMIN_USER}:${ADMIN_PASSWORD}@db:5432/fibeger
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: "8080"
+      GIN_MODE: release
+      AUTO_MIGRATE: "true"
       S3_ENDPOINT: http://minio:9000
       S3_PUBLIC_URL: ${S3_PUBLIC_URL}
       S3_BUCKET: fibeger
@@ -86,10 +86,21 @@ services:
       minio:
         condition: service_healthy
 
+  web:
+    image: ${WEB_IMAGE_REF:-fibeger-web:latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${API_URL:-http://backend:8080}
+      NEXT_PUBLIC_WS_URL: ${WS_URL:-ws://backend:8080/ws}
+      PORT: 3000
+    networks: [fib-net]
+    depends_on:
+      - backend
+
   caddy:
     image: docker.io/library/caddy:2-alpine
     restart: unless-stopped
-    # Publish ONLY to loopback so cloudflared can reach it locally
     ports:
       - "8080:80"
     volumes:
@@ -97,7 +108,8 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - app
+      - backend
+      - web
       - minio
     networks: [fib-net]
 

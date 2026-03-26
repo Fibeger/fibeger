@@ -1,23 +1,19 @@
-name: Build and Deploy to Podman Server
+name: Build and Deploy
 
 on:
   push:
     branches: [main]
 
 jobs:
-  build-and-push:
+  build-backend:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-
     outputs:
       image_ref: ${{ steps.img.outputs.image_ref }}
     steps:
       - uses: actions/checkout@v6
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -26,28 +22,59 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
 
-      - name: Prepare lowercase image reference
+      - name: Prepare image reference
         id: img
         run: |
-          # ${GITHUB_REPOSITORY} is "OwnerName/RepoName"
-          REPO_LC="${GITHUB_REPOSITORY,,}"  # bash lowercasing
-          IMAGE_REF="ghcr.io/${REPO_LC}:${GITHUB_SHA}"
-
-          # If you still want env vars for later steps in this job:
+          REPO_LC="${GITHUB_REPOSITORY,,}"
+          IMAGE_REF="ghcr.io/${REPO_LC}-backend:${GITHUB_SHA}"
           echo "REPO_LC=$REPO_LC" >> "$GITHUB_ENV"
           echo "IMAGE_REF=$IMAGE_REF" >> "$GITHUB_ENV"
-
-          # Set the step output so ${{ steps.img.outputs.image_ref }} works:
           echo "image_ref=$IMAGE_REF" >> "$GITHUB_OUTPUT"
 
-      - name: Build and push image
+      - name: Build and push backend
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./backend
           push: true
           tags: |
             ${{ env.IMAGE_REF }}
-            ghcr.io/${{ env.REPO_LC }}:latest
+            ghcr.io/${{ env.REPO_LC }}-backend:latest
+
+  build-web:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_ref: ${{ steps.img.outputs.image_ref }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Prepare image reference
+        id: img
+        run: |
+          REPO_LC="${GITHUB_REPOSITORY,,}"
+          IMAGE_REF="ghcr.io/${REPO_LC}-web:${GITHUB_SHA}"
+          echo "REPO_LC=$REPO_LC" >> "$GITHUB_ENV"
+          echo "IMAGE_REF=$IMAGE_REF" >> "$GITHUB_ENV"
+          echo "image_ref=$IMAGE_REF" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push web frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/web/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_REF }}
+            ghcr.io/${{ env.REPO_LC }}-web:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -56,72 +83,56 @@ jobs:
     environment:
       name: production
       url: https://fibeger.com
-    needs: [build-and-push]
+    needs: [build-backend, build-web]
     env:
-      IMAGE_REF: ${{ needs.build-and-push.outputs.image_ref }}
-      # Set this to your Tailscale IP or MagicDNS name:
+      BACKEND_IMAGE_REF: ${{ needs.build-backend.outputs.image_ref }}
+      WEB_IMAGE_REF: ${{ needs.build-web.outputs.image_ref }}
       SERVER_TS_HOST: 100.119.236.64
-      # Directory on the remote Fedora server where your stack lives:
       REMOTE_COMPOSE_DIR: /opt/fibeger
     steps:
-      - name: Connect to Tailscale (ephemeral, tagged)
+      - name: Connect to Tailscale
         uses: tailscale/github-action@v4
         with:
           oauth-client-id: ${{ secrets.TAILSCALE_ID }}
           oauth-secret: ${{ secrets.TAILSCALE_SECRET }}
           tags: tag:ci
 
-      - name: Wait for tailnet propagation (optional)
+      - name: Wait for tailnet propagation
         run: sleep 5
 
-      # Everything below runs on the REMOTE host via Tailscale SSH:
-
-      - name: Remote deploy via Tailscale SSH (Podman)
+      - name: Remote deploy via Tailscale SSH
         shell: bash
         run: |
           set -euo pipefail
-
-          # Login to GHCR on the remote - variables expanded locally into the command
           tailscale ssh deploy@${SERVER_TS_HOST} bash -s <<REMOTE_EOF
           set -euo pipefail
           echo "${GHCR_READ_PAT}" | podman login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
 
-          echo "Pulling image: ${IMAGE_REF}"
-          podman pull "${IMAGE_REF}"
+          echo "Pulling backend: ${BACKEND_IMAGE_REF}"
+          podman pull "${BACKEND_IMAGE_REF}"
+          echo "Pulling web: ${WEB_IMAGE_REF}"
+          podman pull "${WEB_IMAGE_REF}"
 
           cd "${REMOTE_COMPOSE_DIR}"
 
-          # Pull latest changes from git if this is a git repository
           if [ -d .git ]; then
-            echo "Pulling latest changes from git..."
             git pull origin main
-          else
-            echo "Warning: Not a git repository, docker-compose.yml may be outdated"
           fi
 
-          # Update the IMAGE_REF in .env file
-          sed -i "s|^IMAGE_REF=.*|IMAGE_REF=${IMAGE_REF}|" .env
+          sed -i "s|^BACKEND_IMAGE_REF=.*|BACKEND_IMAGE_REF=${BACKEND_IMAGE_REF}|" .env
+          sed -i "s|^WEB_IMAGE_REF=.*|WEB_IMAGE_REF=${WEB_IMAGE_REF}|" .env
 
-          # Export IMAGE_REF so podman-compose can use it
-          export IMAGE_REF="${IMAGE_REF}"
+          export BACKEND_IMAGE_REF="${BACKEND_IMAGE_REF}"
+          export WEB_IMAGE_REF="${WEB_IMAGE_REF}"
 
           if command -v podman-compose >/dev/null 2>&1; then
-            echo "Using podman-compose to deploy stack..."
             podman-compose pull || true
             podman-compose up -d --remove-orphans
-          else
-            echo "podman-compose not found, using podman directly"
-            podman stop fibeger || true
-            podman rm fibeger || true
-            podman run -d --name fibeger \
-              -p 3000:3000 \
-              --env-file "${REMOTE_COMPOSE_DIR}/.env" \
-              --restart=always \
-              "${IMAGE_REF}"
           fi
           REMOTE_EOF
         env:
-          IMAGE_REF: ${{ needs.build-and-push.outputs.image_ref }}
+          BACKEND_IMAGE_REF: ${{ needs.build-backend.outputs.image_ref }}
+          WEB_IMAGE_REF: ${{ needs.build-web.outputs.image_ref }}
           REMOTE_COMPOSE_DIR: ${{ env.REMOTE_COMPOSE_DIR }}
           GHCR_USERNAME: ${{ github.actor }}
           GHCR_READ_PAT: ${{ secrets.GHCR_PAT }}

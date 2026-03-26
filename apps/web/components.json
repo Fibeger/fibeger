@@ -1,0 +1,23 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "app/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "iconLibrary": "lucide",
+  "rtl": false,
+  "aliases": {
+    "components": "@fibeger/ui/components",
+    "utils": "@fibeger/ui/lib/utils",
+    "ui": "@fibeger/ui/components/ui",
+    "lib": "@/app/lib",
+    "hooks": "@/app/hooks"
+  },
+  "registries": {}
+}
