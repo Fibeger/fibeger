@@ -1,6 +1,7 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/app/hooks/useAuth";
+import type { User } from "@fibeger/api-client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -22,13 +23,6 @@ import UserAvatar from "@/app/components/UserAvatar";
 
 const MAX_CAPTION_LENGTH = 140;
 
-interface User {
-  id: number;
-  username: string;
-  nickname: string | null;
-  avatar: string | null;
-}
-
 interface FeedPost {
   id: number;
   userId: number;
@@ -43,7 +37,7 @@ interface FeedPost {
 }
 
 export default function FeedPage() {
-  const { data: session, status } = useSession();
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
   const router = useRouter();
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,16 +51,16 @@ export default function FeedPage() {
   const [isPublic, setIsPublic] = useState(false);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (!authLoading && !isAuthenticated) {
       router.push("/auth/login");
     }
-  }, [status, router]);
+  }, [authLoading, isAuthenticated, router]);
 
   useEffect(() => {
-    if (session) {
+    if (isAuthenticated) {
       fetchPosts();
     }
-  }, [session, feedType]);
+  }, [isAuthenticated, feedType]);
 
   const fetchPosts = async () => {
     try {
@@ -172,9 +166,7 @@ export default function FeedPage() {
         setPosts(
           posts.map((post) => {
             if (post.id === postId) {
-              const currentUserId = parseInt(
-                (session?.user as any)?.id || "0"
-              );
+              const currentUserId = user?.id || 0;
               const isLiked = post.likes.some(
                 (like) => like.userId === currentUserId
               );
@@ -216,15 +208,15 @@ export default function FeedPage() {
   };
 
   const isLikedByCurrentUser = (post: FeedPost) => {
-    const currentUserId = parseInt((session?.user as any)?.id || "0");
+    const currentUserId = user?.id || 0;
     return post.likes.some((like) => like.userId === currentUserId);
   };
 
-  if (status === "loading" || loading) {
+  if (authLoading || loading) {
     return <PageLoader message="Loading feed..." />;
   }
 
-  const currentUserId = parseInt((session?.user as any)?.id || "0");
+  const currentUserId = user?.id || 0;
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>

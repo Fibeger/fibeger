@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from './useAuth';
 
 /**
  * Hook for playing notification sounds
@@ -15,11 +15,11 @@ export function useNotificationSound() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const useWebAudioFallback = useRef(false);
   const [notificationSoundsEnabled, setNotificationSoundsEnabled] = useState(true);
-  const { data: session } = useSession();
+  const { user } = useAuth();
 
   // Fetch user's notification sound preference
   useEffect(() => {
-    if (!session?.user?.id) return;
+    if (!user?.id) return;
 
     const fetchPreference = async () => {
       try {
@@ -34,7 +34,7 @@ export function useNotificationSound() {
     };
 
     fetchPreference();
-  }, [session?.user?.id]);
+  }, [user?.id]);
 
   // Initialize audio on mount
   useEffect(() => {

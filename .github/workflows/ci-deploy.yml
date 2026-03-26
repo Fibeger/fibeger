@@ -87,7 +87,7 @@ jobs:
     env:
       BACKEND_IMAGE_REF: ${{ needs.build-backend.outputs.image_ref }}
       WEB_IMAGE_REF: ${{ needs.build-web.outputs.image_ref }}
-      SERVER_TS_HOST: 100.119.236.64
+      SERVER_TS_HOST: ${{ vars.SERVER_TS_HOST }}
       REMOTE_COMPOSE_DIR: /opt/fibeger
     steps:
       - name: Connect to Tailscale

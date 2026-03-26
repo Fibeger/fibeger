@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/app/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useRealtimeEvents } from '@/app/hooks/useRealtimeEvents';
@@ -26,7 +26,7 @@ interface FriendRequest {
 }
 
 export default function FriendsPage() {
-  const { data: session, status } = useSession();
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
   const router = useRouter();
   const { on, off } = useRealtimeEvents();
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,11 +45,11 @@ export default function FriendsPage() {
   };
 
   useEffect(() => {
-    if (status === 'unauthenticated') { router.push('/auth/login'); return; }
-    if (status === 'loading' || !session) return;
+    if (!authLoading && !isAuthenticated) { router.push('/auth/login'); return; }
+    if (authLoading || !isAuthenticated) return;
     fetchFriendRequests();
     fetchFriends();
-  }, [status, session, router]);
+  }, [authLoading, isAuthenticated, router]);
 
   useEffect(() => {
     const handleFriendRemoved = (event: any) => {
@@ -157,7 +157,7 @@ export default function FriendsPage() {
     } catch { showMessage('Error removing friend', 'error'); }
   };
 
-  if (status === 'loading' || loading) return <PageLoader message="Loading friends..." />;
+  if (authLoading || loading) return <PageLoader message="Loading friends..." />;
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>

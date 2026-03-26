@@ -64,8 +64,8 @@ func (h *FriendsHandler) SearchUsers(c *gin.Context) {
 	}
 
 	var users []model.User
-	h.db.Where("id != ? AND (username ILIKE ? OR email ILIKE ?)",
-		userID, "%"+search+"%", "%"+search+"%").
+	h.db.Select("id, username, nickname, avatar, status").
+		Where("id != ? AND username ILIKE ?", userID, "%"+search+"%").
 		Limit(10).Find(&users)
 
 	c.JSON(http.StatusOK, users)
@@ -124,8 +124,11 @@ func (h *FriendsHandler) SendFriendRequest(c *gin.Context) {
 
 func (h *FriendsHandler) GetFriendRequest(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	idStr := c.Param("id")
-	id, _ := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid friend request ID"})
+		return
+	}
 
 	var fr model.FriendRequest
 	if err := h.db.Preload("Sender").Preload("Receiver").Where("id = ? AND (sender_id = ? OR receiver_id = ?)", id, userID, userID).First(&fr).Error; err != nil {
@@ -137,8 +140,11 @@ func (h *FriendsHandler) GetFriendRequest(c *gin.Context) {
 
 func (h *FriendsHandler) RespondToFriendRequest(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	idStr := c.Param("id")
-	id, _ := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid friend request ID"})
+		return
+	}
 
 	var req struct {
 		Action string `json:"action" binding:"required,oneof=accept reject"`

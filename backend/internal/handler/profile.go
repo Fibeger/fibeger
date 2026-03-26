@@ -34,19 +34,43 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+var profileAllowedFields = map[string]string{
+	"nickname":              "nickname",
+	"bio":                   "bio",
+	"avatar":                "avatar",
+	"banner":                "banner",
+	"country":               "country",
+	"city":                  "city",
+	"pronouns":              "pronouns",
+	"birthday":              "birthday",
+	"website":               "website",
+	"socialLinks":           "social_links",
+	"status":                "status",
+	"themeColor":            "theme_color",
+	"interests":             "interests",
+	"showPersonalityBadge":  "show_personality_badge",
+	"steamUsername":          "steam_username",
+}
+
 func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	var updates map[string]interface{}
-	if err := c.ShouldBindJSON(&updates); err != nil {
+	var raw map[string]interface{}
+	if err := c.ShouldBindJSON(&raw); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	delete(updates, "id")
-	delete(updates, "username")
-	delete(updates, "email")
-	delete(updates, "password")
-	delete(updates, "createdAt")
+	updates := make(map[string]interface{})
+	for jsonKey, val := range raw {
+		if dbCol, ok := profileAllowedFields[jsonKey]; ok {
+			updates[dbCol] = val
+		}
+	}
+
+	if len(updates) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No valid fields to update"})
+		return
+	}
 
 	if err := h.db.Model(&model.User{}).Where("id = ?", userID).Updates(updates).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
@@ -76,8 +100,8 @@ func (h *ProfileHandler) GetProfileByUsername(c *gin.Context) {
 		isFriend = count > 0
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"id": user.ID, "username": user.Username, "email": user.Email,
+	profile := gin.H{
+		"id": user.ID, "username": user.Username,
 		"nickname": user.Nickname, "bio": user.Bio, "avatar": user.Avatar,
 		"banner": user.Banner, "country": user.Country, "city": user.City,
 		"pronouns": user.Pronouns, "birthday": user.Birthday,
@@ -88,7 +112,11 @@ func (h *ProfileHandler) GetProfileByUsername(c *gin.Context) {
 		"steamUsername": user.SteamUsername,
 		"createdAt": user.CreatedAt, "updatedAt": user.UpdatedAt,
 		"isOwnProfile": isOwnProfile, "isFriend": isFriend,
-	})
+	}
+	if isOwnProfile {
+		profile["email"] = user.Email
+	}
+	c.JSON(http.StatusOK, profile)
 }
 
 func (h *ProfileHandler) GetProfileFriends(c *gin.Context) {
@@ -118,7 +146,11 @@ func (h *ProfileHandler) UploadAvatar(c *gin.Context) {
 	}
 	defer file.Close()
 
-	data, _ := io.ReadAll(file)
+	data, err := io.ReadAll(file)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read file"})
+		return
+	}
 	hash := storage.HashFile(data)
 	contentType := header.Header.Get("Content-Type")
 
@@ -151,7 +183,11 @@ func (h *ProfileHandler) UploadBanner(c *gin.Context) {
 	}
 	defer file.Close()
 
-	data, _ := io.ReadAll(file)
+	data, err := io.ReadAll(file)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read file"})
+		return
+	}
 	hash := storage.HashFile(data)
 	contentType := header.Header.Get("Content-Type")
 

@@ -22,9 +22,21 @@ func NewUploadHandler(db *gorm.DB, storage *storage.StorageService) *UploadHandl
 	return &UploadHandler{db: db, storage: storage}
 }
 
+var allowedUploadFolders = map[string]bool{
+	"messages": true,
+	"avatars":  true,
+	"banners":  true,
+	"feed":     true,
+	"groups":   true,
+}
+
 func (h *UploadHandler) Upload(c *gin.Context) {
 	userID := mw.GetUserID(c)
 	folder := c.DefaultPostForm("folder", "messages")
+	if !allowedUploadFolders[folder] {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid upload folder"})
+		return
+	}
 
 	form, err := c.MultipartForm()
 	if err != nil {

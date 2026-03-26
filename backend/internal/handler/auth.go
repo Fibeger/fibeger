@@ -94,7 +94,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		Token:     refreshTokenStr,
 		ExpiresAt: time.Now().Add(h.authConfig.RefreshTokenExpiry),
 	}
-	h.db.Create(&refreshToken)
+	if err := h.db.Create(&refreshToken).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create refresh token"})
+		return
+	}
 
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "access_token",
@@ -155,13 +158,20 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 
 	h.db.Delete(&rt)
 
-	accessToken, _ := h.authConfig.GenerateAccessToken(user.ID, user.Username)
+	accessToken, err := h.authConfig.GenerateAccessToken(user.ID, user.Username)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
 	newRefreshStr := uuid.New().String()
-	h.db.Create(&model.RefreshToken{
+	if err := h.db.Create(&model.RefreshToken{
 		UserID:    user.ID,
 		Token:     newRefreshStr,
 		ExpiresAt: time.Now().Add(h.authConfig.RefreshTokenExpiry),
-	})
+	}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create refresh token"})
+		return
+	}
 
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "access_token",

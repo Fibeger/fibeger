@@ -22,7 +22,19 @@ func NewCallsHandler(db *gorm.DB, hub *ws.Hub) *CallsHandler {
 }
 
 func (h *CallsHandler) GetCall(c *gin.Context) {
-	groupID, _ := strconv.Atoi(c.Param("id"))
+	userID := mw.GetUserID(c)
+	groupID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group ID"})
+		return
+	}
+
+	var memberCount int64
+	h.db.Model(&model.GroupChatMember{}).Where("group_chat_id = ? AND user_id = ?", groupID, userID).Count(&memberCount)
+	if memberCount == 0 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Not a member"})
+		return
+	}
 
 	var call model.GroupCall
 	if err := h.db.Where("group_chat_id = ? AND status = ?", groupID, "active").
@@ -37,7 +49,11 @@ func (h *CallsHandler) GetCall(c *gin.Context) {
 
 func (h *CallsHandler) StartCall(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	groupID, _ := strconv.Atoi(c.Param("id"))
+	groupID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group ID"})
+		return
+	}
 
 	var member model.GroupChatMember
 	if err := h.db.Where("group_chat_id = ? AND user_id = ?", groupID, userID).First(&member).Error; err != nil {
@@ -67,7 +83,11 @@ func (h *CallsHandler) StartCall(c *gin.Context) {
 
 func (h *CallsHandler) EndCall(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	groupID, _ := strconv.Atoi(c.Param("id"))
+	groupID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group ID"})
+		return
+	}
 
 	var call model.GroupCall
 	if err := h.db.Where("group_chat_id = ? AND status = ?", groupID, "active").First(&call).Error; err != nil {
@@ -76,7 +96,10 @@ func (h *CallsHandler) EndCall(c *gin.Context) {
 	}
 
 	var member model.GroupChatMember
-	h.db.Where("group_chat_id = ? AND user_id = ?", groupID, userID).First(&member)
+	if err := h.db.Where("group_chat_id = ? AND user_id = ?", groupID, userID).First(&member).Error; err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Not a member"})
+		return
+	}
 	if call.StartedByID != userID && member.Role != "admin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Only the starter or admin can end the call"})
 		return
@@ -96,7 +119,18 @@ func (h *CallsHandler) EndCall(c *gin.Context) {
 
 func (h *CallsHandler) JoinCall(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	groupID, _ := strconv.Atoi(c.Param("id"))
+	groupID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group ID"})
+		return
+	}
+
+	var memberCount int64
+	h.db.Model(&model.GroupChatMember{}).Where("group_chat_id = ? AND user_id = ?", groupID, userID).Count(&memberCount)
+	if memberCount == 0 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Not a member"})
+		return
+	}
 
 	var call model.GroupCall
 	if err := h.db.Where("group_chat_id = ? AND status = ?", groupID, "active").First(&call).Error; err != nil {
@@ -123,7 +157,11 @@ func (h *CallsHandler) JoinCall(c *gin.Context) {
 
 func (h *CallsHandler) LeaveCall(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	groupID, _ := strconv.Atoi(c.Param("id"))
+	groupID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group ID"})
+		return
+	}
 
 	var call model.GroupCall
 	if err := h.db.Where("group_chat_id = ? AND status = ?", groupID, "active").First(&call).Error; err != nil {
@@ -162,7 +200,11 @@ func (h *CallsHandler) LeaveCall(c *gin.Context) {
 
 func (h *CallsHandler) Signal(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	groupID, _ := strconv.Atoi(c.Param("id"))
+	groupID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group ID"})
+		return
+	}
 
 	var member model.GroupChatMember
 	if err := h.db.Where("group_chat_id = ? AND user_id = ?", groupID, userID).First(&member).Error; err != nil {
@@ -176,6 +218,13 @@ func (h *CallsHandler) Signal(c *gin.Context) {
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var targetMemberCount int64
+	h.db.Model(&model.GroupChatMember{}).Where("group_chat_id = ? AND user_id = ?", groupID, req.TargetUserID).Count(&targetMemberCount)
+	if targetMemberCount == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Target user is not a member of this group"})
 		return
 	}
 

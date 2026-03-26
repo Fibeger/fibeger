@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
+import { Noto_Sans } from "next/font/google";
 import "@fibeger/ui/styles/globals.css";
 import { Providers } from "./providers";
 import Sidebar from "./components/Sidebar";
 import { SidebarProvider } from "./context/SidebarContext";
 import MobileHeader from "./components/MobileHeader";
 import { headers } from "next/headers";
+
+const notoSans = Noto_Sans({
+  subsets: ["latin"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Fibeger",
@@ -27,11 +33,10 @@ export default async function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
       </head>
       <body
-        className="noto-sans-regular antialiased"
+        className={`${notoSans.className} antialiased`}
         style={{ backgroundColor: '#313338' }}
       >
         <a href="#main-content" className="skip-link">Skip to main content</a>

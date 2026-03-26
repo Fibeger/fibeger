@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
+import { useAuth } from '@/app/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
@@ -143,7 +143,7 @@ const countries = [
 ];
 
 export default function ProfilePage() {
-  const { data: session, status } = useSession();
+  const { user, loading: authLoading, isAuthenticated, logout } = useAuth();
   const router = useRouter();
   const { isSupported: browserNotificationsSupported, permission: browserNotificationPermission, requestPermission } = useBrowserNotifications();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -194,13 +194,13 @@ export default function ProfilePage() {
   };
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (!authLoading && !isAuthenticated) {
       router.push('/auth/login');
       return;
     }
-    if (status === 'loading' || !session) return;
+    if (authLoading || !isAuthenticated) return;
     fetchProfile();
-  }, [status, session, router]);
+  }, [authLoading, isAuthenticated, router]);
 
   const fetchProfile = async () => {
     try {
@@ -462,7 +462,7 @@ export default function ProfilePage() {
     try {
       const res = await fetch('/api/profile/delete', { method: 'DELETE' });
       if (res.ok) {
-        await signOut({ redirect: false });
+        await logout();
         router.push('/auth/login');
       } else {
         const error = await res.json();
@@ -496,7 +496,7 @@ export default function ProfilePage() {
     return personalityTestData.badges.find((b) => b.id === profile.personalityBadge);
   };
 
-  if (status === 'loading' || loading) return <PageLoader message="Loading profile..." />;
+  if (authLoading || loading) return <PageLoader message="Loading profile..." />;
 
   const canChangeUsername =
     !profile?.lastUsernameChange ||

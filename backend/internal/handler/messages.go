@@ -22,7 +22,11 @@ func NewMessagesHandler(db *gorm.DB, hub *ws.Hub) *MessagesHandler {
 
 func (h *MessagesHandler) DeleteMessage(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
+		return
+	}
 
 	var msg model.Message
 	if err := h.db.First(&msg, id).Error; err != nil {
@@ -60,7 +64,11 @@ func (h *MessagesHandler) DeleteMessage(c *gin.Context) {
 
 func (h *MessagesHandler) AddReaction(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	msgID, _ := strconv.Atoi(c.Param("id"))
+	msgID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
+		return
+	}
 
 	var req struct {
 		Emoji string `json:"emoji" binding:"required"`
@@ -73,6 +81,11 @@ func (h *MessagesHandler) AddReaction(c *gin.Context) {
 	var msg model.Message
 	if err := h.db.First(&msg, msgID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Message not found"})
+		return
+	}
+
+	if !h.isMessageMember(userID, &msg) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Not a member of this conversation"})
 		return
 	}
 
@@ -92,7 +105,11 @@ func (h *MessagesHandler) AddReaction(c *gin.Context) {
 
 func (h *MessagesHandler) RemoveReaction(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	msgID, _ := strconv.Atoi(c.Param("id"))
+	msgID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
+		return
+	}
 
 	var req struct {
 		Emoji string `json:"emoji" binding:"required"`
@@ -105,6 +122,11 @@ func (h *MessagesHandler) RemoveReaction(c *gin.Context) {
 	var msg model.Message
 	if err := h.db.First(&msg, msgID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Message not found"})
+		return
+	}
+
+	if !h.isMessageMember(userID, &msg) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Not a member of this conversation"})
 		return
 	}
 
@@ -134,6 +156,13 @@ func (h *MessagesHandler) MarkAsRead(c *gin.Context) {
 	}
 
 	if req.ConversationID != nil {
+		var count int64
+		h.db.Model(&model.ConversationMember{}).Where("conversation_id = ? AND user_id = ?", *req.ConversationID, userID).Count(&count)
+		if count == 0 {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Not a member of this conversation"})
+			return
+		}
+
 		h.db.Model(&model.ConversationMember{}).
 			Where("conversation_id = ? AND user_id = ?", *req.ConversationID, userID).
 			Update("last_read_message_id", req.MessageID)
@@ -146,6 +175,13 @@ func (h *MessagesHandler) MarkAsRead(c *gin.Context) {
 	}
 
 	if req.GroupChatID != nil {
+		var count int64
+		h.db.Model(&model.GroupChatMember{}).Where("group_chat_id = ? AND user_id = ?", *req.GroupChatID, userID).Count(&count)
+		if count == 0 {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Not a member of this group"})
+			return
+		}
+
 		h.db.Model(&model.GroupChatMember{}).
 			Where("group_chat_id = ? AND user_id = ?", *req.GroupChatID, userID).
 			Update("last_read_message_id", req.MessageID)
@@ -177,6 +213,13 @@ func (h *MessagesHandler) Typing(c *gin.Context) {
 	typingData := gin.H{"userId": userID, "username": user.Username}
 
 	if req.ConversationID != nil {
+		var count int64
+		h.db.Model(&model.ConversationMember{}).Where("conversation_id = ? AND user_id = ?", *req.ConversationID, userID).Count(&count)
+		if count == 0 {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Not a member of this conversation"})
+			return
+		}
+
 		typingData["conversationId"] = *req.ConversationID
 		var members []model.ConversationMember
 		h.db.Where("conversation_id = ?", *req.ConversationID).Find(&members)
@@ -188,6 +231,13 @@ func (h *MessagesHandler) Typing(c *gin.Context) {
 	}
 
 	if req.GroupChatID != nil {
+		var count int64
+		h.db.Model(&model.GroupChatMember{}).Where("group_chat_id = ? AND user_id = ?", *req.GroupChatID, userID).Count(&count)
+		if count == 0 {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Not a member of this group"})
+			return
+		}
+
 		typingData["groupChatId"] = *req.GroupChatID
 		var members []model.GroupChatMember
 		h.db.Where("group_chat_id = ?", *req.GroupChatID).Find(&members)
@@ -199,6 +249,24 @@ func (h *MessagesHandler) Typing(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "OK"})
+}
+
+func (h *MessagesHandler) isMessageMember(userID int, msg *model.Message) bool {
+	if msg.ConversationID != nil {
+		var count int64
+		h.db.Model(&model.ConversationMember{}).Where("conversation_id = ? AND user_id = ?", *msg.ConversationID, userID).Count(&count)
+		if count > 0 {
+			return true
+		}
+	}
+	if msg.GroupChatID != nil {
+		var count int64
+		h.db.Model(&model.GroupChatMember{}).Where("group_chat_id = ? AND user_id = ?", *msg.GroupChatID, userID).Count(&count)
+		if count > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func (h *MessagesHandler) broadcastToMessageMembers(msg *model.Message, eventType ws.EventType, data any) {

@@ -100,7 +100,11 @@ func (h *GroupChatsHandler) CreateGroupChat(c *gin.Context) {
 
 func (h *GroupChatsHandler) GetGroupChat(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group ID"})
+		return
+	}
 
 	var member model.GroupChatMember
 	if err := h.db.Where("group_chat_id = ? AND user_id = ?", id, userID).First(&member).Error; err != nil {
@@ -115,7 +119,11 @@ func (h *GroupChatsHandler) GetGroupChat(c *gin.Context) {
 
 func (h *GroupChatsHandler) DeleteGroupChat(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group ID"})
+		return
+	}
 
 	var member model.GroupChatMember
 	if err := h.db.Where("group_chat_id = ? AND user_id = ? AND role = ?", id, userID, "admin").First(&member).Error; err != nil {
@@ -137,7 +145,11 @@ func (h *GroupChatsHandler) DeleteGroupChat(c *gin.Context) {
 
 func (h *GroupChatsHandler) GetMessages(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	groupID, _ := strconv.Atoi(c.Param("id"))
+	groupID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group ID"})
+		return
+	}
 
 	var member model.GroupChatMember
 	if err := h.db.Where("group_chat_id = ? AND user_id = ?", groupID, userID).First(&member).Error; err != nil {
@@ -155,7 +167,11 @@ func (h *GroupChatsHandler) GetMessages(c *gin.Context) {
 
 func (h *GroupChatsHandler) SendMessage(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	groupID, _ := strconv.Atoi(c.Param("id"))
+	groupID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group ID"})
+		return
+	}
 
 	var member model.GroupChatMember
 	if err := h.db.Where("group_chat_id = ? AND user_id = ?", groupID, userID).First(&member).Error; err != nil {
@@ -211,7 +227,11 @@ func (h *GroupChatsHandler) SendMessage(c *gin.Context) {
 
 func (h *GroupChatsHandler) AddMember(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	groupID, _ := strconv.Atoi(c.Param("id"))
+	groupID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group ID"})
+		return
+	}
 
 	var admin model.GroupChatMember
 	if err := h.db.Where("group_chat_id = ? AND user_id = ? AND role = ?", groupID, userID, "admin").First(&admin).Error; err != nil {
@@ -252,8 +272,16 @@ func (h *GroupChatsHandler) AddMember(c *gin.Context) {
 
 func (h *GroupChatsHandler) RemoveMember(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	groupID, _ := strconv.Atoi(c.Param("id"))
-	targetUserID, _ := strconv.Atoi(c.Param("userId"))
+	groupID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group ID"})
+		return
+	}
+	targetUserID, err := strconv.Atoi(c.Param("userId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
 
 	if targetUserID == userID {
 		var member model.GroupChatMember
@@ -292,7 +320,11 @@ func (h *GroupChatsHandler) RemoveMember(c *gin.Context) {
 
 func (h *GroupChatsHandler) UploadAvatar(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	groupID, _ := strconv.Atoi(c.Param("id"))
+	groupID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid group ID"})
+		return
+	}
 
 	var admin model.GroupChatMember
 	if err := h.db.Where("group_chat_id = ? AND user_id = ? AND role = ?", groupID, userID, "admin").First(&admin).Error; err != nil {
@@ -307,7 +339,11 @@ func (h *GroupChatsHandler) UploadAvatar(c *gin.Context) {
 	}
 	defer file.Close()
 
-	data, _ := io.ReadAll(file)
+	data, err := io.ReadAll(file)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read file"})
+		return
+	}
 	hash := storage.HashFile(data)
 	contentType := header.Header.Get("Content-Type")
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/app/hooks/useAuth';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
@@ -94,7 +94,7 @@ const countries = [
 ];
 
 export default function UserProfilePage() {
-  const { data: session } = useSession();
+  const { user, isAuthenticated } = useAuth();
   const router = useRouter();
   const params = useParams();
   const username = params?.username as string;
@@ -108,7 +108,7 @@ export default function UserProfilePage() {
   const [friendsLoading, setFriendsLoading] = useState(false);
   const [selectedFeedPost, setSelectedFeedPost] = useState<FeedPost | null>(null);
 
-  const currentUserId = parseInt((session?.user as { id?: string })?.id || '0');
+  const currentUserId = (user?.id || 0);
 
   const getUserBadge = () => {
     if (!profile?.personalityBadge) return null;
@@ -116,12 +116,12 @@ export default function UserProfilePage() {
   };
 
   useEffect(() => {
-    if (!session) {
+    if (!isAuthenticated) {
       router.push('/auth/login');
       return;
     }
     if (username) fetchProfile();
-  }, [session, username, router]);
+  }, [isAuthenticated, username, router]);
 
   const fetchProfile = async () => {
     try {

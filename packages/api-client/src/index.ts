@@ -1,4 +1,4 @@
-export { initApiClient, getApiClient } from "./client";
+export { initApiClient, getApiClient, ApiClientError } from "./client";
 export type { ClientConfig } from "./client";
 export { WebSocketClient } from "./websocket";
 export * from "./types";

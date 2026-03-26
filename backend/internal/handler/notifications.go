@@ -36,8 +36,8 @@ func (h *NotificationsHandler) GetNotifications(c *gin.Context) {
 }
 
 func (h *NotificationsHandler) CreateNotification(c *gin.Context) {
+	userID := mw.GetUserID(c)
 	var req struct {
-		UserID  int    `json:"userId" binding:"required"`
 		Type    string `json:"type" binding:"required"`
 		Title   string `json:"title" binding:"required"`
 		Message string `json:"message" binding:"required"`
@@ -49,7 +49,7 @@ func (h *NotificationsHandler) CreateNotification(c *gin.Context) {
 	}
 
 	notif := model.Notification{
-		UserID:  req.UserID,
+		UserID:  userID,
 		Type:    req.Type,
 		Title:   req.Title,
 		Message: req.Message,
@@ -59,13 +59,17 @@ func (h *NotificationsHandler) CreateNotification(c *gin.Context) {
 	}
 	h.db.Create(&notif)
 
-	h.hub.Emit(req.UserID, ws.EventNotification, notif)
+	h.hub.Emit(userID, ws.EventNotification, notif)
 	c.JSON(http.StatusCreated, notif)
 }
 
 func (h *NotificationsHandler) UpdateNotification(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid notification ID"})
+		return
+	}
 
 	var req struct {
 		Read bool `json:"read"`
@@ -88,7 +92,11 @@ func (h *NotificationsHandler) UpdateNotification(c *gin.Context) {
 
 func (h *NotificationsHandler) DeleteNotification(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid notification ID"})
+		return
+	}
 
 	result := h.db.Where("id = ? AND user_id = ?", id, userID).Delete(&model.Notification{})
 	if result.RowsAffected == 0 {

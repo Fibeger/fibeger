@@ -9,7 +9,6 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "declaration": true,
     "skipLibCheck": true
   },
   "include": ["src/**/*.ts"],

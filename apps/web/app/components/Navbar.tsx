@@ -1,16 +1,16 @@
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
+import { useAuth } from '@/app/hooks/useAuth';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import NotificationBell from './NotificationBell';
 import { Button } from '@/components/ui/button';
 
 export default function Navbar() {
-  const { data: session } = useSession();
+  const { user, isAuthenticated, logout } = useAuth();
   const pathname = usePathname();
 
-  if (!session) {
+  if (!isAuthenticated) {
     return null;
   }
 
@@ -121,10 +121,10 @@ export default function Navbar() {
             <NotificationBell />
             <div className="hidden sm:flex items-center gap-2">
               <span className="text-sm font-semibold text-slate-300">
-                {(session.user as any)?.username || session.user?.email}
+                {user?.username || user?.email}
               </span>
             </div>
-            <Button variant="destructive" onClick={() => signOut()} aria-label="Sign out">
+            <Button variant="destructive" onClick={() => logout()} aria-label="Sign out">
               Sign Out
             </Button>
           </div>

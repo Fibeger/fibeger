@@ -1,0 +1,365 @@
+{
+  "title": "AI PEAS Calculator",
+  "description": "Answer these questions to discover your PEAS (Personality, Ethnicity, Attitude, Sexuality) type and earn a badge!",
+  "questions": [
+    {
+      "id": 1,
+      "question": "What's your ethnicity?",
+      "answers": [
+        {
+          "text": "Jewish",
+          "weights": { "jew": 1 }
+        },
+        {
+          "text": "African American",
+          "weights": { "black": 1 }
+        },
+        {
+          "text": "Sami",
+          "weights": { "sami": 1 }
+        },
+        {
+          "text": "Normal",
+          "weights": { "normal": 1 }
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "question": "What's your most used everyday item?",
+      "answers": [
+        {
+          "text": "Crowbar",
+          "weights": { "black": 1 }
+        },
+        {
+          "text": "Reindeer",
+          "weights": { "sami": 1 }
+        },
+        {
+          "text": "Perfume",
+          "weights": { "normal": 1 }
+        },
+        {
+          "text": "Cash register",
+          "weights": { "jew": 1 }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "question": "If you could steal one thing, what would you steal?",
+      "answers": [
+        {
+          "text": "Reindeer",
+          "weights": { "sami": 1 }
+        },
+        {
+          "text": "Your heart",
+          "weights": { "normal": 1 }
+        },
+        {
+          "text": "Bisycle",
+          "weights": { "jew": 1 }
+        },
+        {
+          "text": "KFC Cash Register",
+          "weights": { "black": 1 }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "question": "Who do you hate the most?",
+      "answers": [
+        {
+          "text": "Skatteetaten",
+          "weights": { "normal": 1 }
+        },
+        {
+          "text": "Palestinians",
+          "weights": { "jew": 1 }
+        },
+        {
+          "text": "Police",
+          "weights": { "black": 1 }
+        },
+        {
+          "text": "NVE",
+          "weights": { "sami": 1 }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "question": "What's your preffered job?",
+      "answers": [
+        {
+          "text": "Accountant",
+          "weights": { "jew": 1 }
+        },
+        {
+          "text": "Trapping",
+          "weights": { "black": 1 }
+        },
+        {
+          "text": "NAV",
+          "weights": { "normal": 1 }
+        },
+        {
+          "text": "Reindeer herder",
+          "weights": { "sami": 1 }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "question": "Are you good at saving money?",
+      "answers": [
+        {
+          "text": "I spent my savings on a new Hellcat!",
+          "weights": { "black": 1 }
+        },
+        {
+          "text": "Not really, I spend it all on Moncler.",
+          "weights": { "normal": 1 }
+        },
+        {
+          "text": "All my money comes from my reindeer business up in Kautokeino!",
+          "weights": { "sami": 1 }
+        },
+        {
+          "text": "Yes, I usually try not to spend any!",
+          "weights": { "jew": 1 }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "question": "What's your favourite between these options?",
+      "answers": [
+        {
+          "text": "Womens rights",
+          "weights": { "normal": 1 }
+        },
+        {
+          "text": "Reindeed",
+          "weights": { "sami": 1 }
+        },
+        {
+          "text": "Money",
+          "weights": { "jew": 1 }
+        },
+        {
+          "text": "KFC",
+          "weights": { "black": 1 }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "question": "Who is your favourite black person?",
+      "answers": [
+        {
+          "text": "Martin Luther King Jr.",
+          "weights": { "black": 1 }
+        },
+        {
+          "text": "Obama",
+          "weights": { "normal": 1 }
+        },
+        {
+          "text": "Kevin Hart",
+          "weights": { "jew": 1 }
+        },
+        {
+          "text": "Reindeer",
+          "weights": { "sami": 1 }
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "question": "What's your ideal weekend activity?",
+      "answers": [
+        {
+          "text": "Counting my coins",
+          "weights": { "jew": 1 }
+        },
+        {
+          "text": "Raiding a village",
+          "weights": { "viking": 1 }
+        },
+        {
+          "text": "Coding a side project",
+          "weights": { "nerd": 1 }
+        },
+        {
+          "text": "Gaming with the boys",
+          "weights": { "gamer": 1 }
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "question": "What's your dream job?",
+      "answers": [
+        {
+          "text": "Game developer",
+          "weights": { "gamer": 1 }
+        },
+        {
+          "text": "Data scientist",
+          "weights": { "nerd": 1 }
+        },
+        {
+          "text": "Viking explorer",
+          "weights": { "viking": 1 }
+        },
+        {
+          "text": "Accountant",
+          "weights": { "jew": 1 }
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "question": "What's your go-to drink?",
+      "answers": [
+        {
+          "text": "Energy drinks",
+          "weights": { "gamer": 1 }
+        },
+        {
+          "text": "Mead",
+          "weights": { "viking": 1 }
+        },
+        {
+          "text": "Black coffee",
+          "weights": { "nerd": 1 }
+        },
+        {
+          "text": "Champagne",
+          "weights": { "normal": 1 }
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "question": "What would you spend 1000kr on?",
+      "answers": [
+        {
+          "text": "New GPU",
+          "weights": { "gamer": 1 }
+        },
+        {
+          "text": "Programming course",
+          "weights": { "nerd": 1 }
+        },
+        {
+          "text": "Axe and shield",
+          "weights": { "viking": 1 }
+        },
+        {
+          "text": "Save it",
+          "weights": { "jew": 1 }
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "question": "What's your spirit animal?",
+      "answers": [
+        {
+          "text": "A reindeer",
+          "weights": { "sami": 1 }
+        },
+        {
+          "text": "A raven",
+          "weights": { "viking": 1 }
+        },
+        {
+          "text": "An owl",
+          "weights": { "nerd": 1 }
+        },
+        {
+          "text": "A wolf with a headset",
+          "weights": { "gamer": 1 }
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "question": "What's your favourite historical era?",
+      "answers": [
+        {
+          "text": "Ancient Rome",
+          "weights": { "normal": 1 }
+        },
+        {
+          "text": "The Viking Age",
+          "weights": { "viking": 1 }
+        },
+        {
+          "text": "The Information Age",
+          "weights": { "nerd": 1 }
+        },
+        {
+          "text": "The golden age of gaming (90s-2000s)",
+          "weights": { "gamer": 1 }
+        }
+      ]
+    }
+  ],
+  "badges": [
+    {
+      "id": "jew",
+      "name": "The Jew",
+      "emoji": "🕎",
+      "description": "Jewish motherfucker who maintains the economy of the world",
+      "color": "#FFD700"
+    },
+    {
+      "id": "normal",
+      "name": "The Normal",
+      "emoji": "👱🏻",
+      "description": "White motherfucker who brings order to the world",
+      "color": "#4169E1"
+    },
+    {
+      "id": "black",
+      "name": "The Chicken Lover",
+      "emoji": "🍗",
+      "description": "Black motherfucker who brings crime to the world",
+      "color": "#FF69B4"
+    },
+    {
+      "id": "sami",
+      "name": "The Sami",
+      "emoji": "🦌",
+      "description": "Sami motherfuckers who brought Johannes to the world",
+      "color": "#FF8C00"
+    },
+    {
+      "id": "viking",
+      "name": "The Viking",
+      "emoji": "🪓",
+      "description": "Norse warrior who pillages and plunders with honour",
+      "color": "#5865F2"
+    },
+    {
+      "id": "nerd",
+      "name": "The Nerd",
+      "emoji": "🤓",
+      "description": "Intellectual galaxy-brain who fixes the printer no one asked about",
+      "color": "#22C55E"
+    },
+    {
+      "id": "gamer",
+      "name": "The Gamer",
+      "emoji": "🎮",
+      "description": "Sleep-deprived legend who carries the team every single time",
+      "color": "#A855F7"
+    }
+  ]
+}

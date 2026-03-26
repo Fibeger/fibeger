@@ -2,22 +2,58 @@ package middleware
 
 import (
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/fibeger/backend/internal/auth"
 	"github.com/gin-gonic/gin"
 )
 
+var allowedOrigins []string
+
+func init() {
+	if extra := os.Getenv("ALLOWED_ORIGINS"); extra != "" {
+		for _, o := range strings.Split(extra, ",") {
+			if o = strings.TrimSpace(o); o != "" {
+				allowedOrigins = append(allowedOrigins, o)
+			}
+		}
+	}
+	defaults := []string{
+		"https://fibeger.com",
+		"tauri://localhost",
+		"http://tauri.localhost",
+	}
+	allowedOrigins = append(allowedOrigins, defaults...)
+}
+
+func IsAllowedOrigin(origin string) bool {
+	if origin == "" {
+		return false
+	}
+	for _, o := range allowedOrigins {
+		if strings.EqualFold(o, origin) {
+			return true
+		}
+	}
+	if strings.HasPrefix(origin, "http://localhost:") || origin == "http://localhost" {
+		return true
+	}
+	if strings.HasPrefix(origin, "http://127.0.0.1:") || origin == "http://127.0.0.1" {
+		return true
+	}
+	return false
+}
+
 func CORS() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
-		if origin == "" {
-			origin = "*"
+		if IsAllowedOrigin(origin) {
+			c.Header("Access-Control-Allow-Origin", origin)
+			c.Header("Access-Control-Allow-Credentials", "true")
 		}
-		c.Header("Access-Control-Allow-Origin", origin)
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization")
-		c.Header("Access-Control-Allow-Credentials", "true")
 		c.Header("Access-Control-Max-Age", "86400")
 
 		if c.Request.Method == "OPTIONS" {
@@ -61,15 +97,23 @@ func extractToken(c *gin.Context) string {
 		return token
 	}
 
-	return c.Query("token")
+	return ""
 }
 
 func GetUserID(c *gin.Context) int {
-	id, _ := c.Get("userID")
-	return id.(int)
+	id, ok := c.Get("userID")
+	if !ok {
+		return 0
+	}
+	v, _ := id.(int)
+	return v
 }
 
 func GetUsername(c *gin.Context) string {
-	username, _ := c.Get("username")
-	return username.(string)
+	username, ok := c.Get("username")
+	if !ok {
+		return ""
+	}
+	v, _ := username.(string)
+	return v
 }

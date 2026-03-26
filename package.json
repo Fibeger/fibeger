@@ -6,9 +6,9 @@
     "dev:web": "pnpm --filter @fibeger/web dev",
     "dev:backend": "cd backend && go run ./cmd/server",
     "build:web": "pnpm --filter @fibeger/web build",
-    "build:ui": "pnpm --filter @fibeger/ui build",
-    "build:api-client": "pnpm --filter @fibeger/api-client build",
-    "build:packages": "pnpm --filter @fibeger/ui build && pnpm --filter @fibeger/api-client build",
+    "check:ui": "pnpm --filter @fibeger/ui lint",
+    "check:api-client": "pnpm --filter @fibeger/api-client lint",
+    "check:packages": "pnpm --filter @fibeger/ui lint && pnpm --filter @fibeger/api-client lint",
     "lint": "pnpm -r lint",
     "clean": "pnpm -r exec rm -rf dist .next node_modules/.cache"
   },

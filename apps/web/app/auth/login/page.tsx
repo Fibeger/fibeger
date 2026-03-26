@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { login } from "@/app/lib/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -23,22 +23,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const result = await signIn("credentials", {
-        username,
-        password,
-        redirect: true,
-        callbackUrl: "/feed",
-      });
-
-      if (!result?.ok) {
-        setError(result?.error || "Invalid credentials");
-        return;
-      }
-
+      await login(username, password);
       router.push("/feed");
-    } catch (err) {
-      setError("An error occurred. Please try again.");
-      console.error(err);
+    } catch (err: any) {
+      setError(err?.message || "Invalid credentials");
     } finally {
       setLoading(false);
     }

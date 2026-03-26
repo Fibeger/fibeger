@@ -51,6 +51,10 @@ async function clearTokens() {
   }
 }
 
+export function getAccessToken(): string | null {
+  return tokenStore.accessToken;
+}
+
 initApiClient({
   baseUrl: API_URL,
   wsUrl: WS_URL,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from './useAuth';
 import { useRealtimeEvents, RealtimeEvent } from './useRealtimeEvents';
 import { useRouter } from 'next/navigation';
 
@@ -29,7 +29,7 @@ import { useRouter } from 'next/navigation';
  * ```
  */
 export function useBrowserNotifications() {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const router = useRouter();
   const { on, off } = useRealtimeEvents();
   const [permission, setPermission] = useState<NotificationPermission>('default');
@@ -179,7 +179,7 @@ export function useBrowserNotifications() {
 
   // Initialize: Check permission status and user preference
   useEffect(() => {
-    if (!isSupported || !session?.user?.id) {
+    if (!isSupported || !user?.id) {
       setIsLoading(false);
       return;
     }
@@ -207,7 +207,7 @@ export function useBrowserNotifications() {
     };
 
     init();
-  }, [isSupported, session?.user?.id]);
+  }, [isSupported, user?.id]);
 
   // Subscribe to real-time notification events
   useEffect(() => {

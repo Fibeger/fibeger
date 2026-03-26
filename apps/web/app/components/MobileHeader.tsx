@@ -1,16 +1,16 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/app/hooks/useAuth';
 import Link from 'next/link';
 import { useSidebar } from '../context/SidebarContext';
 import NotificationBell from './NotificationBell';
 import { Button } from '@/components/ui/button';
 
 export default function MobileHeader() {
-  const { data: session } = useSession();
+  const { isAuthenticated } = useAuth();
   const { toggleSidebar } = useSidebar();
 
-  if (!session) {
+  if (!isAuthenticated) {
     return null;
   }
 

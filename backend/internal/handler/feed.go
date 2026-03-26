@@ -28,7 +28,11 @@ func (h *FeedHandler) GetFeed(c *gin.Context) {
 	query := h.db.Preload("User").Preload("Likes").Order("created_at DESC")
 
 	if userIDFilter != "" {
-		filterID, _ := strconv.Atoi(userIDFilter)
+		filterID, err := strconv.Atoi(userIDFilter)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid userId filter"})
+			return
+		}
 		if filterID == userID {
 			query = query.Where("user_id = ?", userID)
 		} else {
@@ -102,7 +106,11 @@ func (h *FeedHandler) CreatePost(c *gin.Context) {
 
 func (h *FeedHandler) DeletePost(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
+		return
+	}
 
 	result := h.db.Where("id = ? AND user_id = ?", id, userID).Delete(&model.FeedPost{})
 	if result.RowsAffected == 0 {
@@ -114,7 +122,26 @@ func (h *FeedHandler) DeletePost(c *gin.Context) {
 
 func (h *FeedHandler) ToggleLike(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	postID, _ := strconv.Atoi(c.Param("id"))
+	postID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
+		return
+	}
+
+	var post model.FeedPost
+	if err := h.db.First(&post, postID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+		return
+	}
+
+	if post.UserID != userID && !post.IsPublic {
+		var isFriend int64
+		h.db.Model(&model.Friend{}).Where("user_id = ? AND friend_id = ?", userID, post.UserID).Count(&isFriend)
+		if isFriend == 0 {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Cannot like this post"})
+			return
+		}
+	}
 
 	var existing model.FeedLike
 	if err := h.db.Where("post_id = ? AND user_id = ?", postID, userID).First(&existing).Error; err == nil {

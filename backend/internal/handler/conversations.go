@@ -126,7 +126,11 @@ func (h *ConversationsHandler) CreateConversation(c *gin.Context) {
 
 func (h *ConversationsHandler) GetConversation(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid conversation ID"})
+		return
+	}
 
 	var member model.ConversationMember
 	if err := h.db.Where("conversation_id = ? AND user_id = ?", id, userID).First(&member).Error; err != nil {
@@ -141,7 +145,11 @@ func (h *ConversationsHandler) GetConversation(c *gin.Context) {
 
 func (h *ConversationsHandler) DeleteConversation(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid conversation ID"})
+		return
+	}
 
 	var member model.ConversationMember
 	if err := h.db.Where("conversation_id = ? AND user_id = ?", id, userID).First(&member).Error; err != nil {
@@ -165,7 +173,11 @@ func (h *ConversationsHandler) DeleteConversation(c *gin.Context) {
 
 func (h *ConversationsHandler) GetMessages(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	convID, _ := strconv.Atoi(c.Param("id"))
+	convID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid conversation ID"})
+		return
+	}
 
 	var member model.ConversationMember
 	if err := h.db.Where("conversation_id = ? AND user_id = ?", convID, userID).First(&member).Error; err != nil {
@@ -183,7 +195,11 @@ func (h *ConversationsHandler) GetMessages(c *gin.Context) {
 
 func (h *ConversationsHandler) SendMessage(c *gin.Context) {
 	userID := mw.GetUserID(c)
-	convID, _ := strconv.Atoi(c.Param("id"))
+	convID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid conversation ID"})
+		return
+	}
 
 	var member model.ConversationMember
 	if err := h.db.Where("conversation_id = ? AND user_id = ?", convID, userID).First(&member).Error; err != nil {

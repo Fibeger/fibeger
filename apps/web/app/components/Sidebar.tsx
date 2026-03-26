@@ -1,6 +1,7 @@
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
+import { useAuth } from '@/app/hooks/useAuth';
+import type { User } from '@fibeger/api-client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -8,13 +9,6 @@ import { useSidebar } from '../context/SidebarContext';
 import { useRealtimeEvents } from '@/app/hooks/useRealtimeEvents';
 import UserAvatar from './UserAvatar';
 import { Button } from '@/components/ui/button';
-
-interface User {
-  id: number;
-  username: string;
-  nickname: string | null;
-  avatar: string | null;
-}
 
 interface Message {
   id: number;
@@ -41,7 +35,7 @@ interface GroupChat {
 }
 
 export default function Sidebar() {
-  const { data: session } = useSession();
+  const { user, isAuthenticated, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const { isSidebarOpen, closeSidebar } = useSidebar();
@@ -61,12 +55,12 @@ export default function Sidebar() {
 
   // Initial fetch (no polling!)
   useEffect(() => {
-    if (session) {
+    if (isAuthenticated) {
       fetchConversations();
       fetchGroupChats();
       fetchFriends();
     }
-  }, [session]);
+  }, [isAuthenticated]);
 
   // Subscribe to real-time conversation and group updates
   useEffect(() => {
@@ -81,7 +75,7 @@ export default function Sidebar() {
     // Handle incoming messages to update unread counts instantly
     const handleMessage = (event: any) => {
       const { conversationId, groupChatId, message } = event.data;
-      const currentUserId = parseInt((session?.user as any)?.id || '0');
+      const currentUserId = (user?.id || 0);
 
       // Don't update unread count for own messages
       if (message?.sender?.id === currentUserId) {
@@ -148,7 +142,7 @@ export default function Sidebar() {
       unsubGroupDeleted();
       unsubGroupUpdated();
     };
-  }, [on, session]);
+  }, [on, isAuthenticated]);
 
   const fetchConversations = async () => {
     try {
@@ -213,7 +207,7 @@ export default function Sidebar() {
   };
 
   const getOtherUser = (conversation: Conversation): User | null => {
-    const userId = parseInt((session?.user as any)?.id || '0');
+    const userId = (user?.id || 0);
     return conversation.members.find((m) => m.user.id !== userId)?.user || null;
   };
 
@@ -272,7 +266,7 @@ export default function Sidebar() {
     );
   };
 
-  if (!session) {
+  if (!isAuthenticated) {
     return null;
   }
 
@@ -665,13 +659,13 @@ export default function Sidebar() {
       }}>
         <div className="flex items-center gap-2 px-2">
           <UserAvatar
-            src={(session.user as any)?.avatar}
-            username={(session.user as any)?.username || session.user?.email || 'U'}
+            src={user?.avatar}
+            username={user?.username || 'U'}
             size="sm"
           />
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold truncate" style={{ color: '#f2f3f5' }}>
-              {(session.user as any)?.username || session.user?.email}
+              {user?.username}
             </div>
             <div className="text-xs" style={{ color: '#949ba4' }}>Online</div>
           </div>
@@ -686,7 +680,7 @@ export default function Sidebar() {
               </svg>
             </Link>
             <button
-              onClick={() => signOut()}
+              onClick={() => logout()}
               className="p-1.5 rounded hover:bg-gray-700 transition"
               title="Sign Out"
             >

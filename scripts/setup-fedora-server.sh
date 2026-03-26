@@ -127,8 +127,9 @@ ADMIN_PASSWORD=$ADMIN_PASSWORD
 # NextAuth secret (auto-generated)
 NEXTAUTH_SECRET=$NEXTAUTH_SECRET
 
-# Image reference (will be updated by CI/CD automatically)
-IMAGE_REF=ghcr.io/yourusername/fibeger:latest
+# Image references (will be updated by CI/CD automatically)
+BACKEND_IMAGE_REF=ghcr.io/yourusername/fibeger-backend:latest
+WEB_IMAGE_REF=ghcr.io/yourusername/fibeger-web:latest
 EOF
     
     chmod 600 "$ENV_FILE"
@@ -213,7 +214,7 @@ print_status "Environment file: $ENV_FILE"
 echo ""
 print_warning "Next Steps:"
 echo "1. Copy docker-compose.yml and Caddyfile to $DEPLOY_DIR"
-echo "2. Update IMAGE_REF in $ENV_FILE with your actual GitHub Container Registry URL"
+echo "2. Update BACKEND_IMAGE_REF and WEB_IMAGE_REF in $ENV_FILE with your actual GitHub Container Registry URLs"
 echo "3. Configure Cloudflare Tunnel (if not done):"
 echo "   - cloudflared tunnel login"
 echo "   - cloudflared tunnel create fibeger"

@@ -2,7 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
-	"log"
+	"log/slog"
 	"sync"
 )
 
@@ -79,15 +79,19 @@ func (h *Hub) Emit(userID int, eventType EventType, data any) {
 	}
 	msg, err := json.Marshal(event)
 	if err != nil {
-		log.Printf("Error marshaling event: %v", err)
+		slog.Error("failed to marshal event", "error", err)
 		return
 	}
 
 	h.mu.RLock()
-	clients := h.connections[userID]
+	src := h.connections[userID]
+	snapshot := make([]*Client, 0, len(src))
+	for c := range src {
+		snapshot = append(snapshot, c)
+	}
 	h.mu.RUnlock()
 
-	for client := range clients {
+	for _, client := range snapshot {
 		select {
 		case client.send <- msg:
 		default:

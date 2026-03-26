@@ -1,5 +1,19 @@
 import type { ApiError } from "./types";
 
+export class ApiClientError extends Error {
+  status: number;
+  code: string;
+  details?: Record<string, string>;
+
+  constructor(status: number, code: string, message: string, details?: Record<string, string>) {
+    super(message);
+    this.name = "ApiClientError";
+    this.status = status;
+    this.code = code;
+    this.details = details;
+  }
+}
+
 export interface ClientConfig {
   baseUrl: string;
   wsUrl: string;
@@ -69,14 +83,23 @@ class ApiClient {
 
     if (response.status === 401) {
       this.config.onTokenExpired?.();
-      throw new Error("Unauthorized");
+      throw new ApiClientError(401, "unauthorized", "Unauthorized");
     }
 
     if (!response.ok) {
-      const error: ApiError = await response.json().catch(() => ({
-        error: `HTTP ${response.status}: ${response.statusText}`,
-      }));
-      throw new Error(error.error || `Request failed: ${response.status}`);
+      try {
+        const error: ApiError = await response.json();
+        throw new ApiClientError(
+          response.status,
+          error.error || "unknown_error",
+          error.error || "Request failed",
+          typeof error.details === "object" ? error.details as Record<string, string> : undefined
+        );
+      } catch (e) {
+        if (e instanceof ApiClientError) throw e;
+        const text = await response.text().catch(() => "");
+        throw new ApiClientError(response.status, "unknown_error", text || "Request failed");
+      }
     }
 
     if (response.status === 204) {

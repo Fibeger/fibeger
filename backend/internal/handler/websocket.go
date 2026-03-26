@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/fibeger/backend/internal/auth"
+	mw "github.com/fibeger/backend/internal/middleware"
 	ws "github.com/fibeger/backend/internal/websocket"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -14,7 +15,7 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
-		return true
+		return mw.IsAllowedOrigin(r.Header.Get("Origin"))
 	},
 }
 
@@ -48,7 +49,7 @@ func (h *WebSocketHandler) HandleWebSocket(c *gin.Context) {
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Printf("WebSocket upgrade failed: %v", err)
+		slog.Error("websocket upgrade failed", "error", err)
 		return
 	}
 

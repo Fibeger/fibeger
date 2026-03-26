@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -62,10 +63,11 @@ export default function Layout({ children }: LayoutProps) {
 }
 
 function NavLink({ href, label }: { href: string; label: string }) {
-  const isActive = window.location.pathname.startsWith(href);
+  const location = useLocation();
+  const isActive = location.pathname.startsWith(href);
   return (
-    <a
-      href={href}
+    <Link
+      to={href}
       className="flex items-center px-3 py-2 rounded text-sm font-medium transition-colors"
       style={{
         backgroundColor: isActive ? 'var(--hover-bg)' : 'transparent',
@@ -73,6 +75,6 @@ function NavLink({ href, label }: { href: string; label: string }) {
       }}
     >
       {label}
-    </a>
+    </Link>
   );
 }

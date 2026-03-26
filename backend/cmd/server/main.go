@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/fibeger/backend/internal/auth"
@@ -18,24 +18,35 @@ import (
 )
 
 func main() {
+	var logHandler slog.Handler
+	if os.Getenv("GIN_MODE") == "release" {
+		logHandler = slog.NewJSONHandler(os.Stdout, nil)
+	} else {
+		logHandler = slog.NewTextHandler(os.Stdout, nil)
+	}
+	slog.SetDefault(slog.New(logHandler))
+
 	godotenv.Load()
 
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		log.Fatal("DATABASE_URL is required")
+		slog.Error("DATABASE_URL is required")
+		os.Exit(1)
 	}
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Error),
 	})
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		slog.Error("failed to connect to database", "error", err)
+		os.Exit(1)
 	}
 
 	if os.Getenv("AUTO_MIGRATE") == "true" {
-		log.Println("Running auto-migration...")
+		slog.Warn("using GORM AutoMigrate - use goose migrations in production")
 		if err := db.AutoMigrate(model.AllModels()...); err != nil {
-			log.Fatalf("Auto-migration failed: %v", err)
+			slog.Error("auto-migration failed", "error", err)
+			os.Exit(1)
 		}
 	}
 
@@ -44,7 +55,8 @@ func main() {
 		jwtSecret = os.Getenv("NEXTAUTH_SECRET")
 	}
 	if jwtSecret == "" {
-		log.Fatal("JWT_SECRET is required")
+		slog.Error("JWT_SECRET is required")
+		os.Exit(1)
 	}
 	authConfig := auth.NewConfig(jwtSecret)
 
@@ -142,9 +154,9 @@ func main() {
 
 		api.GET("/notifications", notifsHandler.GetNotifications)
 		api.POST("/notifications", notifsHandler.CreateNotification)
+		api.PATCH("/notifications/mark-all-read", notifsHandler.MarkAllRead)
 		api.PATCH("/notifications/:id", notifsHandler.UpdateNotification)
 		api.DELETE("/notifications/:id", notifsHandler.DeleteNotification)
-		api.PATCH("/notifications/mark-all-read", notifsHandler.MarkAllRead)
 
 		api.POST("/upload", uploadHandler.Upload)
 
@@ -157,8 +169,9 @@ func main() {
 		port = "8080"
 	}
 
-	log.Printf("Server starting on :%s", port)
+	slog.Info("server starting", "port", port)
 	if err := r.Run(":" + port); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+		slog.Error("failed to start server", "error", err)
+		os.Exit(1)
 	}
 }

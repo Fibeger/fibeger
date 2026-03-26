@@ -3,7 +3,7 @@
 import { useBrowserNotifications } from '@/app/hooks/useBrowserNotifications';
 import { useNotificationSound } from '@/app/hooks/useNotificationSound';
 import { useRealtimeEvents } from '@/app/hooks/useRealtimeEvents';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/app/hooks/useAuth';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, Suspense } from 'react';
 
@@ -20,7 +20,7 @@ function BrowserNotificationsContent() {
   const { isSupported, permission, isEnabled } = useBrowserNotifications();
   const { playSound } = useNotificationSound();
   const { on } = useRealtimeEvents();
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -38,12 +38,12 @@ function BrowserNotificationsContent() {
 
   // Global message sound handler - plays when NOT viewing the chat
   useEffect(() => {
-    if (!session?.user?.id) {
+    if (!user?.id) {
       console.log('[Sound] No session, skipping sound subscription');
       return;
     }
 
-    const currentUserId = parseInt((session.user as any).id || '0');
+    const currentUserId = user.id;
     console.log('[Sound] Setting up sound subscription for user:', currentUserId);
     
     const handleMessage = (event: any) => {
@@ -102,7 +102,7 @@ function BrowserNotificationsContent() {
       console.log('[Sound] Unsubscribing from message events');
       unsubscribe();
     };
-  }, [on, playSound, session?.user?.id, pathname, searchParams]);
+  }, [on, playSound, user?.id, pathname, searchParams]);
 
   // This component doesn't render anything
   return null;
