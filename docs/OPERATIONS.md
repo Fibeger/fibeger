@@ -38,7 +38,8 @@ Containers (via Podman Compose):
 ├─ db             → PostgreSQL database
 ├─ minio          → MinIO object storage
 ├─ pgadmin        → Database admin interface
-├─ app            → Next.js application
+├─ backend        → Go API + WebSocket
+├─ web            → Next.js frontend
 └─ caddy          → Reverse proxy
 ```
 
@@ -318,12 +319,12 @@ podman-compose ps
 
 # View logs
 podman-compose logs -f
-podman-compose logs -f app          # Specific container
-podman-compose logs --tail=50 app   # Last 50 lines
+podman-compose logs -f web          # Specific container
+podman-compose logs --tail=50 web
 
 # Restart containers
 podman-compose restart
-podman-compose restart app          # Specific container
+podman-compose restart web          # Specific container
 
 # Stop/Start
 podman-compose stop
@@ -345,25 +346,26 @@ podman-compose up -d --force-recreate
 podman ps
 podman ps -a  # Include stopped
 
-# View logs
-podman logs fibeger_app_1 -f
-podman logs --tail=50 fibeger_app_1
+# View logs (container names depend on project directory; use `podman ps` to confirm)
+podman logs fibeger_web_1 -f
+podman logs fibeger_backend_1 -f
+podman logs --tail=50 fibeger_web_1
 
 # Execute commands
-podman exec -it fibeger_app_1 bash
+podman exec -it fibeger_web_1 sh
 podman exec -it fibeger_db_1 psql -U admin fibeger
 
 # Restart container
-podman restart fibeger_app_1
+podman restart fibeger_web_1
 
 # Stop/Start
-podman stop fibeger_app_1
-podman start fibeger_app_1
+podman stop fibeger_web_1
+podman start fibeger_web_1
 
 # Remove and recreate
-podman stop fibeger_app_1
-podman rm fibeger_app_1
-cd /opt/fibeger && podman-compose up -d app
+podman stop fibeger_web_1
+podman rm fibeger_web_1
+cd /opt/fibeger && podman-compose up -d web
 ```
 
 ## Monitoring
@@ -473,7 +475,8 @@ podman exec fibeger_minio_1 mc admin info myminio 2>/dev/null || echo "MinIO che
 cd /opt/fibeger && podman-compose logs -f
 
 # Tail specific container
-podman-compose logs -f app
+podman-compose logs -f web
+podman-compose logs -f backend
 
 # Tail system services
 sudo journalctl -u cloudflared -f
@@ -707,10 +710,10 @@ sudo journalctl -u cloudflared -f
 1. Can you curl localhost:8080?
    curl -H "Host: your-domain.com" http://127.0.0.1:8080
    
-   NO → Check Caddy and app containers
+   NO → Check Caddy, backend, and web containers
         podman-compose ps
         podman-compose logs caddy
-        podman-compose logs app
+        podman-compose logs caddy web backend
    
    YES → Continue to step 2
 
@@ -841,7 +844,8 @@ cd /opt/fibeger && podman-compose restart
 cd /opt/fibeger && podman-compose logs -f
 
 # Specific container
-podman-compose logs -f app
+podman-compose logs -f web
+podman-compose logs -f backend
 
 # System service
 sudo journalctl -u cloudflared -f

@@ -31,11 +31,13 @@ Public Internet
 - **Container Runtime**: Podman (Docker-compatible)
 - **Orchestration**: Podman Compose
 - **Reverse Proxy**: Caddy 2
+- **API**: Go (Gin) backend image (`backend/Dockerfile`)
+- **Web**: Next.js standalone image (`apps/web/Dockerfile`)
 - **Database**: PostgreSQL 16
 - **Object Storage**: MinIO (S3-compatible)
 - **Tunnel**: Cloudflare Tunnel
 - **Secure Access**: Tailscale SSH
-- **CI/CD**: GitHub Actions
+- **CI/CD**: GitHub Actions (separate GHCR images for backend and web)
 
 ### Key Benefits
 
@@ -65,12 +67,18 @@ For experienced users, here's the fast path:
 
 ### 1. GitHub Secrets (5 minutes)
 
-Add three secrets at `https://github.com/YOUR_USERNAME/Fibeger/settings/secrets/actions`:
+Add three **secrets** at `https://github.com/YOUR_USERNAME/Fibeger/settings/secrets/actions`:
 
 ```
 GHCR_PAT         - GitHub Personal Access Token (write:packages)
 TAILSCALE_ID     - Tailscale OAuth Client ID
 TAILSCALE_SECRET - Tailscale OAuth Client Secret
+```
+
+Add one **variable** (same Actions settings → *Variables*):
+
+```
+SERVER_TS_HOST   - Tailscale IP or MagicDNS hostname for the deployment target
 ```
 
 ### 2. Server Setup (15 minutes)
@@ -107,14 +115,15 @@ sudo systemctl enable --now cloudflared
 ### 4. Configure and Deploy (5 minutes)
 
 ```bash
-# Update Tailscale IP in workflow
-# Edit .github/workflows/ci-deploy.yml line 56
+# Tailscale deploy target: set repository variable SERVER_TS_HOST (Tailscale IP or MagicDNS name)
+# GitHub → Settings → Secrets and variables → Actions → Variables
 
-# Update IMAGE_REF on server
+# On the server, ensure .env lists both images (defaults work with local builds; CI updates these on deploy)
 ssh user@your-server
 cd /opt/fibeger
 nano .env
-# Set: IMAGE_REF=ghcr.io/YOUR_GITHUB_USERNAME/fibeger:latest
+# BACKEND_IMAGE_REF=ghcr.io/your-org/fibeger-backend:latest
+# WEB_IMAGE_REF=ghcr.io/your-org/fibeger-web:latest
 
 # Deploy!
 git push origin main
@@ -187,6 +196,12 @@ Add to https://login.tailscale.com/admin/acls:
 **TAILSCALE_SECRET**:
 - Name: `TAILSCALE_SECRET`
 - Value: OAuth Client Secret from step 1.2
+
+On the same Actions settings page, open the **Variables** tab and add:
+
+**SERVER_TS_HOST**:
+- Name: `SERVER_TS_HOST`
+- Value: Tailscale IPv4 or MagicDNS name of the server the workflow SSHs into (used by the deploy job).
 
 #### 1.4 Enable GitHub Actions
 
@@ -280,28 +295,32 @@ cd /opt/fibeger
 nano .env
 ```
 
-Add this content:
+Add this content (adjust domains and image names):
 
 ```env
 # Admin credentials (used for DB, MinIO, pgAdmin)
 ADMIN_USER=admin
 ADMIN_PASSWORD=CHANGE_THIS_SECURE_PASSWORD
 
-# NextAuth secret (generate with: openssl rand -base64 32)
-NEXTAUTH_SECRET=CHANGE_THIS_TO_RANDOM_64_CHAR_STRING
+# JWT signing for Go backend (generate with: openssl rand -base64 32)
+JWT_SECRET=CHANGE_THIS_TO_RANDOM_64_CHAR_STRING
 
-# Public URLs
-NEXTAUTH_URL=https://fibeger.com
+# Inter-container URLs (Compose defaults shown; Caddy still serves the public site)
+API_URL=http://backend:8080
+WS_URL=ws://backend:8080/ws
+
+# Public URL MinIO objects resolve through (browser-facing, often your site + /minio)
 S3_PUBLIC_URL=https://fibeger.com/minio
 
-# Image reference (will be updated by CI/CD)
-IMAGE_REF=ghcr.io/yourusername/fibeger:latest
+# Container images (CI/CD rewrites these to commit-tagged GHCR refs on deploy)
+BACKEND_IMAGE_REF=ghcr.io/yourusername/fibeger-backend:latest
+WEB_IMAGE_REF=ghcr.io/yourusername/fibeger-web:latest
 ```
 
 **Generate secure secrets**:
 
 ```bash
-# Generate NextAuth secret
+# Generate JWT secret
 openssl rand -base64 32
 
 # Generate secure password
@@ -407,18 +426,9 @@ sudo journalctl -u cloudflared -f
 
 #### 4.1 Update Configuration
 
-**On Server - Update IMAGE_REF**:
+**On server — image references**:
 
-```bash
-ssh user@your-server
-cd /opt/fibeger
-nano .env
-```
-
-Change:
-```env
-IMAGE_REF=ghcr.io/YOUR_GITHUB_USERNAME/fibeger:latest
-```
+CI updates `BACKEND_IMAGE_REF` and `WEB_IMAGE_REF` in `.env` on deploy. For manual runs, set both to the GHCR tags you pulled.
 
 #### 4.2 Deploy via GitHub Actions
 
@@ -432,9 +442,9 @@ git push origin main
 
 1. Go to https://github.com/YOUR_USERNAME/Fibeger/actions
 2. Watch the workflow run (~10 minutes total)
-3. Wait for both jobs to complete:
-   - ✅ Build and push (~5-7 minutes)
-   - ✅ Deploy (~2-3 minutes)
+3. Wait for jobs to complete:
+   - ✅ build-backend and build-web (~5–10 minutes total)
+   - ✅ deploy (~2–3 minutes)
 
 #### 4.3 Initialize MinIO
 
@@ -504,6 +514,8 @@ Use this checklist to verify your deployment:
   - [ ] `GHCR_PAT`
   - [ ] `TAILSCALE_ID`
   - [ ] `TAILSCALE_SECRET`
+- [ ] Repository **variable** configured:
+  - [ ] `SERVER_TS_HOST` (Tailscale address for `tailscale ssh deploy@…`)
 
 #### Tailscale Configuration
 - [ ] Tailscale installed and running
@@ -530,13 +542,14 @@ Use this checklist to verify your deployment:
 
 - [ ] Pushed to main branch
 - [ ] GitHub Actions workflow triggered
-- [ ] Build job completed successfully
+- [ ] build-backend and build-web jobs completed successfully
 - [ ] Deploy job completed successfully
 - [ ] All containers running:
   - [ ] db (PostgreSQL)
   - [ ] minio (MinIO)
   - [ ] pgadmin (pgAdmin)
-  - [ ] app (Next.js)
+  - [ ] backend (Go API)
+  - [ ] web (Next.js)
   - [ ] caddy (Caddy)
 
 ### MinIO Configuration
@@ -581,14 +594,15 @@ cd /opt/fibeger
 podman-compose ps
 ```
 
-Expected output:
+Expected output (names may vary slightly with project prefix):
 ```
-NAME                   STATUS      PORTS
-fibeger_db_1          Up          5432/tcp
-fibeger_minio_1       Up          9000-9001/tcp
-fibeger_pgadmin_1     Up          80/tcp
-fibeger_app_1         Up          3000/tcp
-fibeger_caddy_1       Up          0.0.0.0:8080->80/tcp
+NAME                     STATUS      PORTS
+fibeger_db_1            Up          5432/tcp
+fibeger_minio_1         Up          9000-9001/tcp
+fibeger_pgadmin_1       Up          80/tcp
+fibeger_backend_1       Up          8080/tcp
+fibeger_web_1           Up          3000/tcp
+fibeger_caddy_1         Up          0.0.0.0:8080->80/tcp
 ```
 
 ### Check Logs
@@ -598,7 +612,8 @@ fibeger_caddy_1       Up          0.0.0.0:8080->80/tcp
 podman-compose logs -f
 
 # Specific service
-podman-compose logs -f app
+podman-compose logs -f backend
+podman-compose logs -f web
 podman-compose logs -f caddy
 podman-compose logs -f db
 ```
@@ -647,12 +662,12 @@ git push origin main
 **Solutions**:
 
 ```bash
-# Check Dockerfile
-# Check package.json dependencies
-# Check build logs in Actions tab
+# Check backend/Dockerfile and apps/web/Dockerfile
+# Check Go module and pnpm workspace build logs in Actions
 
-# Test build locally
-docker build -t test .
+# Test builds locally (examples)
+docker build -t fibeger-backend-test ./backend
+docker build -f apps/web/Dockerfile -t fibeger-web-test .
 ```
 
 #### Deploy Job Fails - Tailscale Connection
@@ -743,11 +758,11 @@ podman-compose logs db
 # Check health
 podman exec fibeger_db_1 pg_isready -U admin -d fibeger
 
-# Verify DATABASE_URL
-podman exec fibeger_app_1 env | grep DATABASE_URL
+# Verify DATABASE_URL on the API container
+podman exec fibeger_backend_1 env | grep DATABASE_URL
 
-# Restart database and app
-podman-compose restart db app
+# Restart database and backend
+podman-compose restart db backend
 ```
 
 ---
@@ -787,7 +802,7 @@ sudo systemctl restart cloudflared
 # Test local endpoint
 curl -H "Host: fibeger.com" http://127.0.0.1:8080
 # If this works, issue is with Cloudflare Tunnel
-# If this fails, issue is with Caddy or app
+# If this fails, issue is with Caddy, backend, or web
 ```
 
 #### DNS Issues
@@ -835,20 +850,20 @@ podman exec fibeger_minio_1 mc anonymous get myminio/fibeger
 
 #### MinIO Not Accessible
 
-**Check connectivity from app**:
+**Check connectivity from backend** (S3 client runs in Go):
 
 ```bash
-podman exec fibeger_app_1 curl -v http://minio:9000/minio/health/live
-# Should return HTTP 200 OK
+podman exec fibeger_backend_1 wget -qO- http://minio:9000/minio/health/live
+# Or curl if available in the image
 ```
 
-**Check environment variables**:
+**Check environment variables** on the backend:
 
 ```bash
-podman exec fibeger_app_1 env | grep S3
+podman exec fibeger_backend_1 env | grep S3
 ```
 
-Should show:
+Should show (names may match `docker-compose.yml`):
 ```
 S3_ENDPOINT=http://minio:9000
 S3_PUBLIC_URL=https://fibeger.com/minio
@@ -861,7 +876,7 @@ S3_USE_TLS=false
 **Restart services**:
 
 ```bash
-podman-compose restart minio app
+podman-compose restart minio backend
 ```
 
 ---
@@ -926,14 +941,17 @@ cd /opt/fibeger
 # Login to GHCR
 echo $GHCR_PAT | podman login ghcr.io -u YOUR_USERNAME --password-stdin
 
-# Pull latest image
-export IMAGE_REF=ghcr.io/YOUR_USERNAME/fibeger:latest
-podman pull $IMAGE_REF
+# Pull latest images (example tags)
+export BACKEND_IMAGE_REF=ghcr.io/YOUR_USERNAME/fibeger-backend:latest
+export WEB_IMAGE_REF=ghcr.io/YOUR_USERNAME/fibeger-web:latest
+podman pull "$BACKEND_IMAGE_REF"
+podman pull "$WEB_IMAGE_REF"
 
 # Update .env
-sed -i "s|^IMAGE_REF=.*|IMAGE_REF=$IMAGE_REF|" .env
+sed -i "s|^BACKEND_IMAGE_REF=.*|BACKEND_IMAGE_REF=${BACKEND_IMAGE_REF}|" .env
+sed -i "s|^WEB_IMAGE_REF=.*|WEB_IMAGE_REF=${WEB_IMAGE_REF}|" .env
 
-# Restart with new image
+# Restart with new images
 podman-compose up -d
 ```
 

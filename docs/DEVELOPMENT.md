@@ -1,62 +1,98 @@
-# Local Development Setup
+# Local Development
 
-This project uses **SQLite** for local development and **PostgreSQL** for production.
+Fibeger is a **pnpm monorepo**: Go API in `backend/`, Next.js web app in `apps/web/`, optional Tauri desktop app in `apps/tauri/`, and shared packages `packages/ui` and `packages/api-client`.
 
-## Quick Start
+## Prerequisites
+
+- **Node.js** 20+ and **pnpm** 9+  
+- **Go** 1.25+ (match `backend/go.mod` and CI)  
+- **PostgreSQL** 16+ (local install or Docker)  
+- **MinIO** or another S3-compatible store (optional for some features; uploads need S3 config)
+
+## Environment
+
+1. Copy root examples and adjust for local URLs:
+   - [`../.env.example`](../.env.example) — deployment-oriented; for local dev you mainly need consistent `JWT_SECRET`, database URL, and S3 settings if testing uploads.
+   - [`../backend/.env.example`](../backend/.env.example) — `DATABASE_URL`, `JWT_SECRET`, `PORT`, S3 variables, optional `AUTO_MIGRATE=true`.
+
+2. **Web** reads `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_WS_URL` (see `apps/web/next.config.ts` rewrites). For a local Go server on port 8080, typical values are:
+   - `NEXT_PUBLIC_API_URL=http://localhost:8080`
+   - `NEXT_PUBLIC_WS_URL=ws://localhost:8080/ws`
+
+Create `apps/web/.env.local` with those values if you run Next separately from Compose.
+
+## Install dependencies
+
+From the repository root:
 
 ```bash
-npm run dev:local
+pnpm install
 ```
 
-This command will:
-1. Generate the Prisma Client with the SQLite schema
-2. Create/sync the local SQLite database
-3. Start the Next.js development server
+## Run the backend
 
-The local database is stored at `prisma/dev.db`.
+```bash
+cd backend
+# Ensure DATABASE_URL and JWT_SECRET are set (e.g. via .env)
+go run ./cmd/server
+```
 
-## Available Scripts
+With `AUTO_MIGRATE=true`, GORM will auto-migrate models (development convenience). SQL migrations live in [`backend/migrations/`](../backend/migrations/README.md) for production-oriented workflows.
 
-### Development
-- `npm run dev:local` - Start local development with SQLite (recommended)
-- `npm run dev` - Start development (expects PostgreSQL - for Docker setup)
+## Run the web app
 
-### Database Management
-- `npm run db:setup:local` - Setup/reset local SQLite database
-- `npm run db:push:local` - Push schema changes to local SQLite database
-- `npm run db:studio:local` - Open Prisma Studio for local database
+From the repository root:
 
-## Schema Files
+```bash
+pnpm dev:web
+```
 
-- `prisma/schema.prisma` - Production schema (PostgreSQL) - committed to git
-- `prisma/schema.dev.prisma` - Development schema (SQLite) - used for local dev
-- `prisma/schema.production.prisma` - Backup of production schema
+This runs `next dev` for `@fibeger/web`. API and WebSocket calls are proxied to the backend via Next rewrites using `NEXT_PUBLIC_API_URL`.
 
-## How It Works
+## Run backend + web together (quick loop)
 
-The project maintains separate Prisma schemas for different environments:
+In two terminals:
 
-1. **Local Development**: Uses `schema.dev.prisma` with SQLite
-2. **Production**: Uses `schema.prisma` with PostgreSQL
+```bash
+# Terminal 1
+cd backend && go run ./cmd/server
 
-The `dev:local` script automatically generates the Prisma Client with the correct schema before starting the dev server.
+# Terminal 2 (repo root)
+pnpm dev:web
+```
 
-## First Time Setup
+## Tauri (optional)
 
-1. Clone the repository
-2. Run `npm install`
-3. Run `npm run dev:local`
+```bash
+cd apps/tauri
+pnpm install   # if not done from root
+pnpm exec tauri dev
+```
 
-The SQLite database will be created automatically on first run.
+Uses the same `@fibeger/api-client` and `@fibeger/ui` packages; point API/WS URLs at your running backend.
+
+## Linting
+
+From the repository root:
+
+```bash
+pnpm lint              # all workspaces that define lint
+pnpm check:ui        # @fibeger/ui only
+pnpm check:api-client
+```
+
+Backend:
+
+```bash
+cd backend
+go vet ./...
+go build ./cmd/server
+```
 
 ## Troubleshooting
 
-If you encounter database connection errors:
+- **401 / login loops**: Confirm `JWT_SECRET` matches between processes and that the web app’s public API/WS URLs match where Go is listening.
+- **DB connection errors**: Check `DATABASE_URL` and that PostgreSQL is reachable.
+- **Upload errors**: Verify S3/MinIO env vars on the backend and bucket existence.
 
-1. Stop the dev server (Ctrl+C)
-2. Run `npm run db:setup:local` to regenerate the database
-3. Run `npm run dev:local` to start again
-
-## Production Build
-
-Production builds use the PostgreSQL schema automatically via the build scripts. No manual intervention needed.
+For production-style setup with containers, see [DEPLOYMENT.md](DEPLOYMENT.md) and [OPERATIONS.md](OPERATIONS.md).
